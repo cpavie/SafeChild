@@ -1,0 +1,56 @@
+<ion-header>
+  <ion-toolbar color="warning">
+    <ion-buttons>
+      <ion-title class="titulo">Perfil - Conductor</ion-title>
+      <ion-button class="boton" (click)="logout()">
+        <ion-icon class="icono" name="log-out-outline"></ion-icon>
+      </ion-button>
+      <ion-button class="boton" (click)="ayuda()" >
+        <ion-icon class="icono" name="help-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="warning">
+  <ion-item color="warning">
+    <ion-label>
+      Bienvenido {{this.dataService.getDataConductorPersona().p_nombres}}
+    </ion-label>
+  </ion-item>
+  <ion-item color="warning">
+    <ion-avatar class="avatar">
+      <img src="{{this.dataService.getDataConductor().con_fotoperfil}}" alt="">
+    </ion-avatar>
+  </ion-item>
+  <ion-item color="warning">
+    <ion-label position="stacked"></ion-label>
+    <ion-input readonly value="{{this.dataService.getDataConductorPersona().p_nombres}}"></ion-input>
+    <ion-input readonly value="{{this.dataService.getDataConductorPersona().p_apellidos}}"></ion-input>
+    <ion-input readonly inputmode="email" value="{{this.dataService.getDataConductor().con_correo}}"></ion-input>
+    <ion-input placeholder="Direccion" [(ngModel)]="direccion" value="{{this.dataService.getDataConductorPersona().p_direccion}}"></ion-input>
+    <ion-input placeholder="Comuna" [(ngModel)]="comuna" value="{{this.dataService.getDataConductorPersona().p_comuna}}"></ion-input>
+    <ion-input placeholder="Telefono" [(ngModel)]="telefono" inputmode="numeric" value="{{this.dataService.getDataConductor().con_telefono}"></ion-input>
+  </ion-item>
+  <ion-item-divider color="warning">
+    </ion-item-divider>
+    <ion-button (click)="goResetPassword()" expand="block" fill="clear" shape="round">
+      Cambiar Contraseña
+    </ion-button>
+  <ion-item color="warning">
+    <ion-grid>
+      <ion-row>
+        <ion-col style="text-align: center;">
+          <div>
+            <ion-button size="small" color="dark" shape="round" (click)="save()">Confirmar</ion-button>
+          </div>
+        </ion-col>
+        <ion-col style="text-align: center;">
+          <div>
+            <ion-button size="small" color="medium" shape="round">Cancelar</ion-button>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </ion-item>
+</ion-content>

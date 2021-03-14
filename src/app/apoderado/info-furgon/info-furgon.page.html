@@ -1,0 +1,32 @@
+<ion-header>
+  <ion-toolbar color="warning">
+      <ion-title class="titulo">Información Furgon</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="warning">
+    <ion-label>
+      Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
+    </ion-label>
+    <br>
+    <ion-item color="warning">
+      <ion-avatar>
+                <img src="{{this.dataFurgon.fur_foto}}">
+
+      </ion-avatar>
+     </ion-item>
+    <ion-item color="warning">
+      <ion-label>Capacidad del furgon:</ion-label>
+      <ion-input value="{{this.dataFurgon.fur_capacidad}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Patente del furgon: </ion-label>
+      <ion-input value="{{this.dataFurgon.fur_patente}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Foto del permiso:</ion-label>
+      <img src="{{this.dataFurgon.fur_fotopermiso}}" >
+    </ion-item>
+    <ion-button color="dark" (click)="dismiss()" shape="round" expand="block">Volver
+    </ion-button>
+</ion-content>

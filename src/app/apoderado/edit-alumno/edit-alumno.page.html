@@ -1,0 +1,36 @@
+<ion-header>
+  <ion-toolbar color="warning">
+      <ion-title class="titulo">Editar Alumno</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="warning">
+  <ion-label>
+      Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
+    </ion-label><br><br>
+    <ion-label>
+      Editando Información de {{this.dataAlumnoPersona.p_nombres}}
+    </ion-label>
+    <ion-item color="warning" >
+      <ion-label position="stacked"></ion-label>
+      <ion-input [(ngModel)]="comuna"  ></ion-input>
+      <ion-input [(ngModel)]="direccion"  ></ion-input>
+      <ion-textarea [(ngModel)]="comentario"  ></ion-textarea>
+    </ion-item>
+    <ion-item color="warning">
+    <ion-grid>
+      <ion-row>
+        <ion-col style="text-align: center;">
+          <div>
+            <ion-button size="small" color="dark" shape="round" (click)="save()">Confirmar</ion-button>
+          </div>
+        </ion-col>
+        <ion-col style="text-align: center;">
+          <div>
+            <ion-button size="small" color="medium" (click)="dismiss()" shape="round">Cancelar</ion-button>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </ion-item>
+</ion-content>

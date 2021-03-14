@@ -1,0 +1,45 @@
+<ion-header>
+  <ion-toolbar color="warning">
+      <ion-title class="titulo">Información Auxiliar</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="warning">
+  <ion-label>
+      Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
+    </ion-label>
+    <br>
+    <ion-avatar>
+      <img src="{{this.dataAux.aux_fotoperfil}}" />
+    </ion-avatar>
+    <ion-item color="warning">
+      <ion-label>Nombres:</ion-label>
+      <ion-input value="{{this.dataAuxPersona.p_nombres}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Apellidos: </ion-label>
+      <ion-input value="{{this.dataAuxPersona.p_apellidos}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Rut:</ion-label>
+      <ion-input value="{{this.dataAuxPersona.p_numdocumento}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Telefono:</ion-label>
+      <ion-input value="{{this.dataAux.aux_telefono}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Correo:</ion-label>
+      <ion-input value="{{this.dataAux.aux_correo}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Comuna:</ion-label>
+      <ion-input value="{{this.dataAuxPersona.p_comuna}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Direccion:</ion-label>
+      <ion-input value="{{this.dataAuxPersona.p_direccion}}" readonly></ion-input>
+    </ion-item>
+    <ion-button color="dark" (click)="dismiss()" shape="round" expand="block">Volver
+    </ion-button>
+</ion-content>

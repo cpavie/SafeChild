@@ -1,0 +1,30 @@
+<ion-header>
+  <ion-toolbar color="warning">
+    <ion-buttons>
+      <ion-title class="titulo">Inicio</ion-title>
+      <ion-button class="boton" (click)="logout()">
+        <ion-icon class="icono" name="log-out-outline"></ion-icon>
+      </ion-button>
+      <ion-button class="boton" (click)="ayuda()">
+        <ion-icon class="icono" name="help-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="warning">
+  <ion-item color="warning">
+    <ion-label>Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}</ion-label>
+  </ion-item>
+  <br>
+  <ion-item color="warning">
+    <ion-label>Alumno</ion-label>
+    <ion-select placeholder="seleccione uno" interface="action-sheet" [(ngModel)]="bind">
+      <ng-container *ngFor="let item of alumnos_id, let i = index">
+          <ion-select-option [value]="item" >{{alumnos_nombres[i]}}</ion-select-option>
+      </ng-container>
+    </ion-select>
+  </ion-item>
+  <ion-button color="dark" shape="round" expand="block" class="btnInicio" (click)="getInfoAlumno(bind)">Rastrear</ion-button>
+  <ion-button color="dark" shape="round" expand="block" class="btnInicio" (click)="editAlumno(bind)">Editar información alumno</ion-button>
+</ion-content>

@@ -1,0 +1,31 @@
+ion-content {
+    --padding-bottom: 10px;
+    --padding-end: 8%;
+    --padding-start: 8%;
+    --padding-top: 30px;
+}
+
+.boton {
+    float: right;
+}
+
+.titulo {
+    float: left;
+    font-size: 1.3em;
+}
+
+.icono {
+    zoom: 1.5;
+}
+ion-avatar{
+    margin: 0 auto;
+    text-align: center;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 220px !important; //any size
+    max-height: 220px !important; //any size 
+}
+img {
+    width: 270px;
+    height: auto;
+}

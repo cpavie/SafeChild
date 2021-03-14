@@ -1,0 +1,38 @@
+<ion-header>
+  <ion-toolbar color="warning">
+    <ion-buttons>
+      <ion-title class="titulo">Inicio - Conductor</ion-title>
+      <ion-button class="boton" (click)="logout()">
+        <ion-icon class="icono" name="log-out-outline"></ion-icon>
+      </ion-button>
+      <ion-button class="boton" (click)="ayuda()">
+        <ion-icon class="icono" name="help-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="warning">
+  <ion-label>Bienvenido {{this.dataService.getDataConductorPersona().p_nombres}}</ion-label>
+  <br>
+  <br>
+  <ion-label>Seleccione alumnos para comenzar ruta</ion-label>
+  <ion-list color="warning">
+    <ion-item *ngFor="let item of id_alumnos, let i =index" color="warning">
+      <ion-label>{{this.alumnos_nombres[i]}}</ion-label>
+      <ion-checkbox slot="end"  color="dark" [(ngModel)]="alums[i]" (click)="dataAlum(item,this.alumnos_nombres[i])"></ion-checkbox>
+    </ion-item>
+  </ion-list>
+
+  <br>
+  <ion-item color="warning">
+    <ion-label>Seleccione un auxliar</ion-label>
+    <ion-select color="primary" value="notifications" interface="action-sheet" [(ngModel)]="bind">
+      <ion-select-option *ngFor="let item of id_auxiliares, let i=index" value="{{id_auxiliares[i]}}">{{auxiliares_nombres[i]}}</ion-select-option>
+    </ion-select>
+  </ion-item>
+  <br>
+  <div style="text-align: center;">
+      <ion-button size="small" color="dark" shape="round" (click)="comenzarRuta()">Comenzar Ruta</ion-button>
+  </div>
+</ion-content>

@@ -1,0 +1,31 @@
+<ion-header>
+  <ion-toolbar color="warning">
+    <ion-buttons>
+      <ion-title class="titulo">Rastreo</ion-title>
+      <ion-button class="boton" (click)="logout()">
+        <ion-icon class="icono" name="log-out-outline"></ion-icon>
+      </ion-button>
+      <ion-button class="boton" (click)="ayuda()">
+        <ion-icon class="icono" name="help-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="warning" >
+  <ion-item color="warning" style="white-space:normal;">
+    <ion-label>
+      Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
+    </ion-label>
+  </ion-item>
+    <ion-item color="warning">
+    <ion-label style="white-space:pre-wrap;">Usted está viendo el recorrido de {{this.dataService.getDataAlumnoPersona().p_nombres}}
+    </ion-label>
+  </ion-item>
+  <br>
+  <div id="map1" style="width: auto; height: 70%"></div>
+  <br>
+    <ion-button size="small" color="dark" shape="round" expand="block" (click)="goInfoConductor()">Info conductor</ion-button>
+    <ion-button size="small" color="dark" shape="round" expand="block" (click)="goInfoAuxiliar()">Info auxiliar</ion-button>
+    <ion-button size="small" color="dark" shape="round" expand="block" (click)="goInfoFurgon()">Info furgón</ion-button>
+</ion-content>

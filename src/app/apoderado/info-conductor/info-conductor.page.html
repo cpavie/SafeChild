@@ -1,0 +1,52 @@
+<ion-header>
+  <ion-toolbar color="warning">
+      <ion-title class="titulo">Información Conductor</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="warning">
+  <ion-label>
+      Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
+    </ion-label>
+    <br>
+    <br>
+    <ion-item color="warning">
+      <ion-avatar>
+        <img src="{{this.dataConductor.con_fotoperfil}}" />
+      </ion-avatar>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Nombres:</ion-label>
+      <ion-input value="{{this.dataConductorPersona.p_nombres}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Apellidos: </ion-label>
+      <ion-input value="{{this.dataConductorPersona.p_apellidos}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Rut:</ion-label>
+      <ion-input value="{{this.dataConductorPersona.p_numdocumento}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Telefono:</ion-label>
+      <ion-input value="{{this.dataConductor.con_telefono}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Correo:</ion-label>
+      <ion-input value="{{this.dataConductor.con_correo}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Comuna:</ion-label>
+      <ion-input value="{{this.dataConductorPersona.p_comuna}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Direccion:</ion-label>
+      <ion-input value="{{this.dataConductorPersona.p_direccion}}" readonly></ion-input>
+    </ion-item>
+    <ion-item color="warning">
+      <ion-label>Foto licencia: </ion-label>
+      <ion-img src="{{this.img_licencia}}"></ion-img>
+    </ion-item>
+    <ion-button color="dark" (click)="dismiss()" shape="round" expand="block">Volver
+    </ion-button>
+</ion-content>
