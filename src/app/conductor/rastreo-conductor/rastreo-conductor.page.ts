@@ -198,25 +198,8 @@ export class RastreoConductorPage implements OnInit,OnDestroy{
     })
     await alert.present();
   }
-  ionViewDidLeave(){
-console.log('wtf');
-  }
 
   ngOnDestroy() {
-    this.db.collection('auxiliar').doc(this.dataService.getDataAuxiliar().id_auxiliar).update({
-              aux_estado : 0
-            })
-            this.db.collection('conductor').doc(this.dataService.getDataConductor().id_conductor).update({
-              con_estado : 0
-            })
-            for (let i = 0; i < this.ids_alumnos.length; i++) {
-              this.db.collection('alumno').doc(this.ids_alumnos[i]).update({
-                alu_estado : 0
-              })                                          
-            }        
-            this.AFA.signOut();
-            this.router.navigate(['/home'])
-    
     this.map.remove();  
   }
 
