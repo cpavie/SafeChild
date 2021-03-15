@@ -1,13 +1,14 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import * as Leaflet from 'leaflet';
 import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { DatosConductorService } from 'src/app/servicios/datos-conductor.service';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { AlertController, ModalController, ToastController } from '@ionic/angular';
+import { AlertController, ModalController, Platform, ToastController } from '@ionic/angular';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { Subscription, interval } from 'rxjs';
+import { Subscription, interval, Observable, observable } from 'rxjs';
 import { AyudaPage } from 'src/app/ayuda/ayuda.page';
+import { exit } from 'process';
 
 @Component({
   selector: 'app-rastreo-conductor',
@@ -31,9 +32,22 @@ export class RastreoConductorPage implements OnInit,OnDestroy{
      public toastController: ToastController,
      public AFA: AngularFireAuth,
      public alertController: AlertController,
-     private modalController: ModalController) { }
+     private modalController: ModalController) 
+     { 
+    //window.addEventListener('beforeunload', function (e) {
+     // e.preventDefault();
+     // e.returnValue = ''; 
+   // });
+
+    window.addEventListener('popstate', function(event) {
+    alert('finaliza la ruta!')
+    history.pushState(null, null, window.location.pathname);
+
+    }, false);
+  }
 
   ngOnInit() {
+    
     this.geolocation.getCurrentPosition().then((resp)=>{
       this.lat = resp.coords.latitude;
       this.lon = resp.coords.longitude;
@@ -147,13 +161,14 @@ export class RastreoConductorPage implements OnInit,OnDestroy{
           con_estado : 0
         })
         this.sub.unsubscribe()
+        this.AFA.signOut()
         toast.onWillDismiss().then(a=>window.location.replace('/home'))
         
   }
   
   async logout() {
       const alert = await this.alertController.create({
-      header: '¿Desea cerrar sesión?' ,
+      header: 'Al presionar confirmar se finalizara la ruta.' ,
       buttons:[
         {
           text: 'Cancelar',
@@ -164,20 +179,44 @@ export class RastreoConductorPage implements OnInit,OnDestroy{
         {
           text: 'Confirmar',
           handler: b =>{
-            this.db.collection('conductor').doc(this.dataService.getDataConductor().id_conductor).get().forEach(doc=>{
-              if (doc.get('con_estado')==0) {
-                this.AFA.signOut();
-                this.router.navigate(['/home'])
-              }
-            })            
+            this.db.collection('auxiliar').doc(this.dataService.getDataAuxiliar().id_auxiliar).update({
+              aux_estado : 0
+            })
+            this.db.collection('conductor').doc(this.dataService.getDataConductor().id_conductor).update({
+              con_estado : 0
+            })
+            for (let i = 0; i < this.ids_alumnos.length; i++) {
+              this.db.collection('alumno').doc(this.ids_alumnos[i]).update({
+                alu_estado : 0
+              })                                          
+            }        
+            this.AFA.signOut();
+            this.router.navigate(['/home'])
           }
         }
       ]
     })
     await alert.present();
   }
+  ionViewDidLeave(){
+console.log('wtf');
+  }
 
   ngOnDestroy() {
+    this.db.collection('auxiliar').doc(this.dataService.getDataAuxiliar().id_auxiliar).update({
+              aux_estado : 0
+            })
+            this.db.collection('conductor').doc(this.dataService.getDataConductor().id_conductor).update({
+              con_estado : 0
+            })
+            for (let i = 0; i < this.ids_alumnos.length; i++) {
+              this.db.collection('alumno').doc(this.ids_alumnos[i]).update({
+                alu_estado : 0
+              })                                          
+            }        
+            this.AFA.signOut();
+            this.router.navigate(['/home'])
+    
     this.map.remove();  
   }
 

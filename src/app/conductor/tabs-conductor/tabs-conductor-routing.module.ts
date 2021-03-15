@@ -17,7 +17,7 @@ const routes: Routes = [
       },
       {
         path: 'perfil-conductor',
-        canActivate:[IsLoggedGuard],
+        canActivate:[IsLoggedGuard,InicioConductorGuard],
         loadChildren: () => import('../perfil-conductor/perfil-conductor.module').then( m => m.PerfilConductorPageModule)
       },
       {

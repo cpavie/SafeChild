@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { RastreoConductorGuard } from "../app/guards/rastreo-conductor.guard";
 
 const routes: Routes = [
   {
