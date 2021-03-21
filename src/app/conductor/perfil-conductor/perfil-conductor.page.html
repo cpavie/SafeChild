@@ -22,21 +22,34 @@
     <ion-avatar class="avatar">
       <img src="{{this.dataService.getDataConductor().con_fotoperfil}}" alt="">
     </ion-avatar>
+  </ion-item>  
+  <ion-item color="warning">
+    <label><b>Nombres: </b></label>
+    <ion-input readonly value="{{this.dataService.getDataConductorPersona().p_nombres}}"></ion-input>
   </ion-item>
   <ion-item color="warning">
-    <ion-label position="stacked"></ion-label>
-    <ion-input readonly value="{{this.dataService.getDataConductorPersona().p_nombres}}"></ion-input>
+    <label><b>Apellidos: </b></label>
     <ion-input readonly value="{{this.dataService.getDataConductorPersona().p_apellidos}}"></ion-input>
-    <ion-input readonly inputmode="email" value="{{this.dataService.getDataConductor().con_correo}}"></ion-input>
-    <ion-input placeholder="Direccion" [(ngModel)]="direccion" value="{{this.dataService.getDataConductorPersona().p_direccion}}"></ion-input>
-    <ion-input placeholder="Comuna" [(ngModel)]="comuna" value="{{this.dataService.getDataConductorPersona().p_comuna}}"></ion-input>
-    <ion-input placeholder="Telefono" [(ngModel)]="telefono" inputmode="numeric" value="{{this.dataService.getDataConductor().con_telefono}"></ion-input>
   </ion-item>
-  <ion-item-divider color="warning">
-    </ion-item-divider>
-    <ion-button (click)="goResetPassword()" expand="block" fill="clear" shape="round">
+  <ion-item color="warning">
+    <ion-label><b>Correo: </b></ion-label>
+    <ion-input readonly value="{{this.dataService.getDataConductor().con_correo}}"></ion-input>
+  </ion-item>
+  <ion-item color="warning">
+    <ion-label for="direccion"><b>Dirección: </b></ion-label>
+    <ion-input id="direccion" [(ngModel)]="direccion" value="{{this.dataService.getDataConductorPersona().p_direccion}}"></ion-input>
+  </ion-item>
+  <ion-item color="warning">
+    <ion-label for="comuna"><b>Comuna: </b></ion-label>
+    <ion-input id="comuna" [(ngModel)]="comuna" value="{{this.dataService.getDataConductorPersona().p_comuna}}"></ion-input>
+  </ion-item>
+  <ion-item color="warning">
+    <ion-label for="telefono"><b>Telefono: </b></ion-label>
+    <ion-input id="telefono" [(ngModel)]="telefono" inputmode="numeric" value="{{this.dataService.getDataConductor().con_telefono}"></ion-input>
+  </ion-item>
+  <ion-button (click)="goResetPassword()" expand="block" color="dark" fill="clear" shape="round">
       Cambiar Contraseña
-    </ion-button>
+  </ion-button>
   <ion-item color="warning">
     <ion-grid>
       <ion-row>
@@ -47,7 +60,7 @@
         </ion-col>
         <ion-col style="text-align: center;">
           <div>
-            <ion-button size="small" color="medium" shape="round">Cancelar</ion-button>
+            <ion-button size="small" color="medium" shape="round" (click)="cancel()">Cancelar</ion-button>
           </div>
         </ion-col>
       </ion-row>

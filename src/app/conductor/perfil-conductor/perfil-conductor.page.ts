@@ -99,6 +99,9 @@ export class PerfilConductorPage implements OnInit {
     })
     await alert.present();
   }
+  cancel(){
+    this.ionViewWillEnter();
+  }
   async ayuda(){
     const modal = await this.modalController.create({
                 component: AyudaPage

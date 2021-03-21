@@ -100,6 +100,11 @@ export class PerfilApoderadoPage implements OnInit {
     })
     await alert.present();
   }
+
+  reset(){
+    this.ionViewWillEnter()
+  }
+  
   async ayuda(){
     const modal = await this.modalController.create({
                 component: AyudaPage
