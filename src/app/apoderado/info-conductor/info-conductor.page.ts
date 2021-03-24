@@ -1,35 +1,35 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ModalController } from '@ionic/angular';
-import { DatosService } from 'src/app/servicios/datos.service';
-import { AngularFirestore } from '@angular/fire/firestore';
-
+import { Component, Input, OnInit } from "@angular/core";
+import { ModalController } from "@ionic/angular";
+import { DatosService } from "src/app/servicios/datos.service";
+import { AngularFirestore } from "@angular/fire/firestore";
 
 @Component({
-  selector: 'app-info-conductor',
-  templateUrl: './info-conductor.page.html',
-  styleUrls: ['./info-conductor.page.scss'],
+  selector: "app-info-conductor",
+  templateUrl: "./info-conductor.page.html",
+  styleUrls: ["./info-conductor.page.scss"],
 })
-
 export class InfoConductorPage implements OnInit {
+  @Input() dataConductor;
+  @Input() dataConductorPersona;
+  img_licencia: string;
 
-  @Input() dataConductor
-  @Input() dataConductorPersona
-  img_licencia:string;
-
-  constructor(public modalCtrl: ModalController, 
+  constructor(
+    public modalCtrl: ModalController,
     public dataService: DatosService,
-    public db: AngularFirestore) { }
+    public db: AngularFirestore
+  ) {}
 
   ngOnInit() {
-    this.db.collection('licencia').doc(this.dataConductor.id_licencia).get().forEach(doc=>{
-      this.img_licencia = doc.get('lic_foto')
-    })
-    
+    this.db
+      .collection("licencia")
+      .doc(this.dataConductor.id_licencia)
+      .get()
+      .forEach((doc) => {
+        this.img_licencia = doc.get("lic_foto");
+      });
   }
 
-  dismiss(){
-    
+  dismiss() {
     this.modalCtrl.dismiss();
   }
-
 }

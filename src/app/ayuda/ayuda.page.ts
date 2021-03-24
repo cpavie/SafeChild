@@ -1,20 +1,17 @@
-import { Component, OnInit } from '@angular/core';
-import { ModalController } from '@ionic/angular';
+import { Component, OnInit } from "@angular/core";
+import { ModalController } from "@ionic/angular";
 
 @Component({
-  selector: 'app-ayuda',
-  templateUrl: './ayuda.page.html',
-  styleUrls: ['./ayuda.page.scss'],
+  selector: "app-ayuda",
+  templateUrl: "./ayuda.page.html",
+  styleUrls: ["./ayuda.page.scss"],
 })
 export class AyudaPage implements OnInit {
+  constructor(public modalController: ModalController) {}
 
-  constructor(public modalController: ModalController) { }
+  ngOnInit() {}
 
-  ngOnInit() {
+  onClick() {
+    this.modalController.dismiss();
   }
-
-  onClick(){
-    this.modalController.dismiss()
-  }
-
 }

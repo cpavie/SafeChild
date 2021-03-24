@@ -1,21 +1,22 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ModalController } from '@ionic/angular';
-import { DatosService } from 'src/app/servicios/datos.service';
+import { Component, Input, OnInit } from "@angular/core";
+import { ModalController } from "@ionic/angular";
+import { DatosService } from "src/app/servicios/datos.service";
 
 @Component({
-  selector: 'app-info-furgon',
-  templateUrl: './info-furgon.page.html',
-  styleUrls: ['./info-furgon.page.scss'],
+  selector: "app-info-furgon",
+  templateUrl: "./info-furgon.page.html",
+  styleUrls: ["./info-furgon.page.scss"],
 })
 export class InfoFurgonPage implements OnInit {
-  @Input() dataFurgon
-  constructor(private modalCtrl: ModalController, public dataService: DatosService) { }
+  @Input() dataFurgon;
+  constructor(
+    private modalCtrl: ModalController,
+    public dataService: DatosService
+  ) {}
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
-  dismiss(){
+  dismiss() {
     this.modalCtrl.dismiss();
   }
-
 }
