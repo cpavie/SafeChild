@@ -10,6 +10,7 @@ import {
 } from "@ionic/angular";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { ResetpasswordPage } from "src/app/resetpassword/resetpassword.page";
+import { Apoderado, Persona } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-perfil-apoderado",
@@ -52,7 +53,7 @@ export class PerfilApoderadoPage implements OnInit {
         .doc(this.uid)
         .get()
         .toPromise();
-      const apoderadoData: any = apoderadoDoc.data() || {};
+      const apoderadoData = (apoderadoDoc.data() || {}) as Apoderado;
       this.dataService.setDataApoderado(apoderadoData);
       this.telefono = apoderadoData.apo_telefono;
 
@@ -62,7 +63,7 @@ export class PerfilApoderadoPage implements OnInit {
           .doc(apoderadoData.id_persona)
           .get()
           .toPromise();
-        const personaData: any = personaDoc.data() || {};
+        const personaData = (personaDoc.data() || {}) as Persona;
         this.dataService.setDataApoderadoPersona(personaData);
         this.comuna = personaData.p_comuna;
         this.direccion = personaData.p_direccion;

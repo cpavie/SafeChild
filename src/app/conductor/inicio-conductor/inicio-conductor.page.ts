@@ -5,6 +5,7 @@ import { Router } from "@angular/router";
 import { AlertController, ModalController, ToastController } from "@ionic/angular";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { DatosService } from "src/app/servicios/datos.service";
+import { Auxiliar, Conductor, Furgon, Persona } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-inicio-conductor",
@@ -85,19 +86,19 @@ export class InicioConductorPage implements OnInit {
       .doc(this.uid)
       .get()
       .forEach((doc) => {
-        this.dataService.setDataConductor(doc.data());
+        this.dataService.setDataConductor(doc.data() as Conductor);
         this.db
           .collection("persona")
           .doc(this.dataService.getDataConductor().id_persona)
           .get()
           .forEach((doc) => {
-            this.dataService.setDataConductorPersona(doc.data());
+            this.dataService.setDataConductorPersona(doc.data() as Persona);
             this.db
               .collection("furgon")
               .doc(this.dataService.getDataConductor().id_furgon)
               .get()
               .forEach((doc) => {
-                this.dataService.setdataFurgon(doc.data());
+                this.dataService.setdataFurgon(doc.data() as Furgon);
                 this.id_auxiliares = Object.values(doc.get("auxiliares"));
                 for (let i = 0; i < this.id_auxiliares.length; i++) {
                   this.db
@@ -151,7 +152,7 @@ export class InicioConductorPage implements OnInit {
           .doc(this.bind)
           .get()
           .forEach((doc) => {
-            this.dataService.setDataAuxiliar(doc.data());
+            this.dataService.setDataAuxiliar(doc.data() as Auxiliar);
           });
         this.db.collection("auxiliar").doc(this.bind).update({
           aux_estado: 1,

@@ -7,6 +7,7 @@ import { DatosService } from "../../servicios/datos.service";
 import { AlertController, ModalController, ToastController } from "@ionic/angular";
 import { EditAlumnoPage } from "../edit-alumno/edit-alumno.page";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
+import { Apoderado, Furgon, Persona } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-inicio-apoderado",
@@ -69,14 +70,14 @@ export class InicioApoderadoPage implements OnInit {
             .doc(this.dataService.getDataAlumno().id_furgon)
             .get()
             .forEach((doc) => {
-              this.dataService.setdataFurgon(doc.data());
+              this.dataService.setdataFurgon(doc.data() as Furgon);
             });
           this.db
             .collection("persona")
             .doc(this.dataService.getDataAlumno().id_persona)
             .get()
             .forEach((doc) => {
-              this.dataService.setDataAlumnoPersona(doc.data());
+              this.dataService.setDataAlumnoPersona(doc.data() as Persona);
               this.goEdit();
             });
         });
@@ -100,13 +101,13 @@ export class InicioApoderadoPage implements OnInit {
       .get()
       .forEach((doc) => {
         this.alumnos_id = Object.values(doc.get("id_alumnos"));
-        this.dataService.setDataApoderado(doc.data());
+        this.dataService.setDataApoderado(doc.data() as Apoderado);
         this.db
           .collection("persona")
           .doc(doc.get("id_persona"))
           .get()
           .forEach((doc) => {
-            this.dataService.setDataApoderadoPersona(doc.data());
+            this.dataService.setDataApoderadoPersona(doc.data() as Persona);
           });
         for (let i = 0; i < this.alumnos_id.length; i++) {
           this.db
@@ -149,14 +150,14 @@ export class InicioApoderadoPage implements OnInit {
               .doc(this.dataService.getDataAlumno().id_furgon)
               .get()
               .forEach((doc) => {
-                this.dataService.setdataFurgon(doc.data());
+                this.dataService.setdataFurgon(doc.data() as Furgon);
               });
             this.db
               .collection("persona")
               .doc(this.dataService.getDataAlumno().id_persona)
               .get()
               .forEach((doc) => {
-                this.dataService.setDataAlumnoPersona(doc.data());
+                this.dataService.setDataAlumnoPersona(doc.data() as Persona);
                 this.router.navigate([
                   "/tabs-apoderado/rastreo-apoderado",
                   this.dataService.getDataAlumno().id_alumno,

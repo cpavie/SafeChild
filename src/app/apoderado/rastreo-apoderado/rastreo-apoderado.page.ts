@@ -15,6 +15,7 @@ import { InfoAuxiliarPage } from "../info-auxiliar/info-auxiliar.page";
 import { Subscription } from "rxjs";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
+import { Auxiliar, Conductor, Persona } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-rastreo-apoderado",
@@ -106,13 +107,13 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
             .doc(data.id_conductor)
             .get()
             .forEach((doc) => {
-              this.dataService.setDataConductor(doc.data());
+              this.dataService.setDataConductor(doc.data() as Conductor);
               this.db
                 .collection("persona")
                 .doc(this.dataService.getDataConductor().id_persona)
                 .get()
                 .forEach((doc) => {
-                  this.dataService.setDataConductorPersona(doc.data());
+                  this.dataService.setDataConductorPersona(doc.data() as Persona);
                 })
                 .catch(() => this.avisarErrorCarga());
             })
@@ -124,13 +125,13 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
               .get()
               .forEach((doc) => {
                 if (doc.get("aux_estado") == "1") {
-                  this.dataService.setDataAuxiliar(doc.data());
+                  this.dataService.setDataAuxiliar(doc.data() as Auxiliar);
                   this.db
                     .collection("persona")
                     .doc(this.dataService.getDataAuxiliar().id_persona)
                     .get()
                     .forEach((doc) => {
-                      this.dataService.setDataAuxiliarPersona(doc.data());
+                      this.dataService.setDataAuxiliarPersona(doc.data() as Persona);
                     })
                     .catch(() => this.avisarErrorCarga());
                 }
@@ -152,8 +153,7 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
       .valueChanges()
       .subscribe((data: any) => {
         if (data && data.alu_estado == 0) {
-          let a: string = "";
-          this.dataService.setDataAlumno(a);
+          this.dataService.setDataAlumno({});
           this.toastA();
         }
       });

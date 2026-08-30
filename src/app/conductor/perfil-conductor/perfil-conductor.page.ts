@@ -10,6 +10,7 @@ import {
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { ResetpasswordPage } from "src/app/resetpassword/resetpassword.page";
 import { DatosService } from "src/app/servicios/datos.service";
+import { Conductor, Persona } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-perfil-conductor",
@@ -52,7 +53,7 @@ export class PerfilConductorPage implements OnInit {
         .doc(this.uid)
         .get()
         .toPromise();
-      const conductorData: any = conductorDoc.data() || {};
+      const conductorData = (conductorDoc.data() || {}) as Conductor;
       this.dataService.setDataConductor(conductorData);
       this.telefono = conductorData.con_telefono;
 
@@ -62,7 +63,7 @@ export class PerfilConductorPage implements OnInit {
           .doc(conductorData.id_persona)
           .get()
           .toPromise();
-        const personaData: any = personaDoc.data() || {};
+        const personaData = (personaDoc.data() || {}) as Persona;
         this.dataService.setDataConductorPersona(personaData);
         this.comuna = personaData.p_comuna;
         this.direccion = personaData.p_direccion;
