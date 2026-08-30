@@ -60,7 +60,10 @@ export class InicioApoderadoPage implements OnInit {
         .doc(id_alum)
         .get()
         .forEach((doc) => {
-          this.dataService.setDataAlumno(doc.data());
+          // doc.data() no trae el id del propio documento: se agrega
+          // aparte, porque edit-alumno.page.ts y otras pantallas lo
+          // necesitan para saber a que alumno/{id} escribir despues.
+          this.dataService.setDataAlumno({ ...(doc.data() as any), id_alumno: doc.id });
           this.db
             .collection("furgon")
             .doc(this.dataService.getDataAlumno().id_furgon)
@@ -135,7 +138,12 @@ export class InicioApoderadoPage implements OnInit {
         .get()
         .forEach((doc) => {
           if (doc.get("alu_estado") == 1) {
-            this.dataService.setDataAlumno(doc.data());
+            // doc.data() no trae el id del propio documento: sin esto,
+            // getDataAlumno().id_alumno queda undefined, lo que hace
+            // que RastreoApoderadoGuard bloquee SIEMPRE el acceso a
+            // rastreo-apoderado (exige id_alumno truthy) y que la
+            // navegacion mande a ".../rastreo-apoderado/undefined".
+            this.dataService.setDataAlumno({ ...(doc.data() as any), id_alumno: doc.id });
             this.db
               .collection("furgon")
               .doc(this.dataService.getDataAlumno().id_furgon)
