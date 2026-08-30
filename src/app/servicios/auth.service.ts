@@ -25,29 +25,22 @@ export class AuthService {
     public alertcontroller: AlertController) {
   }
 
-  login(email: string, password: string, type: string) {
-    return new Promise((resolve, rejected) => {
-      this.AFauth.signInWithEmailAndPassword(email, password).then(res => {
-        if (type == "conductor") {
-          const b = this.db.collection('conductor').doc(res.user.uid).get().forEach(doc => {
-            if (doc.exists) {
-              this.router.navigate(['/tabs-conductor'])
-            } else {
-              alert('usuario, contraseña y/o tipo de usuario incorrecto')
-            }
-          }).catch(err => console.log(err))
-        }
-        if (type == "apoderado") {
-          const a = this.db.collection('apoderado').doc(res.user.uid).get().forEach(doc => {
-            if (doc.exists) {
-              this.router.navigate(['/tabs-apoderado'])
-            } else {
-              alert('usuario, contraseña y/o tipo de usuario incorrecto')
-            }
-          }).catch(err => console.log(err));
-        }
-        resolve(res.user.uid)
-      }).catch(err => alert('usuario, contraseña y/o tipo de usuario incorrecto'))
-    })
+  async login(email: string, password: string, type: string) {
+    try {
+      const res = await this.AFauth.signInWithEmailAndPassword(email, password);
+      const roleDoc = await this.db.collection(type).doc(res.user.uid).get().toPromise();
+      if (!roleDoc.exists) {
+        // El usuario se autenticó pero no tiene un documento del rol seleccionado:
+        // cerramos la sesión para no dejarlo autenticado con un rol incorrecto.
+        await this.AFauth.signOut();
+        alert('usuario, contraseña y/o tipo de usuario incorrecto');
+        return null;
+      }
+      this.router.navigate([type === 'conductor' ? '/tabs-conductor' : '/tabs-apoderado']);
+      return res.user.uid;
+    } catch (err) {
+      alert('usuario, contraseña y/o tipo de usuario incorrecto');
+      return null;
+    }
   }
 }

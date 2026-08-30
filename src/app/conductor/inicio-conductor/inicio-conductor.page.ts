@@ -137,7 +137,7 @@ export class InicioConductorPage implements OnInit {
           .update({
             con_estado: 1,
           });
-        this.router.navigate(["tabs-conductor/rastreo-conductor"]);
+        this.router.navigate(["/tabs-conductor/rastreo-conductor"]);
       } else {
         alert("seleccione un auxiliar para comenzar");
       }

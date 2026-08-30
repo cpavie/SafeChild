@@ -1,0 +1,129 @@
+rules_version = '2';
+
+// Borrador. Antes de desplegar (`firebase deploy --only firestore:rules`):
+// probarlo con el simulador de reglas de Firebase Console (o
+// `firebase emulators:start`) contra datos reales, para cada flujo (login,
+// ver alumno, editar perfil, tracking, comenzar/finalizar ruta).
+//
+// Modelo de datos (inferido leyendo src/app, confirmado en consola):
+//   apoderado/{uid}  -> id_persona, id_alumnos: array<alumnoId>
+//   conductor/{uid}  -> id_persona, id_furgon, id_licencia, con_estado
+//   alumno/{id}      -> id_persona, id_furgon, alu_estado, alu_comentario
+//   furgon/{id}      -> id_conductor, fur_coordenadas, alumnos: array,
+//                        auxiliares: array
+//   auxiliar/{id}    -> id_persona, aux_estado
+//   persona/{id}     -> datos personales (sin campo de "dueño" propio)
+//   licencia/{id}    -> lic_foto
+//
+// LIMITACION IMPORTANTE: el lenguaje de reglas de Firestore no permite
+// loops ni queries arbitrarias, solo get()/exists() de documentos
+// puntuales. Para "alumno" se puede verificar con precision la
+// pertenencia (apoderado.id_alumnos contiene el id, o
+// furgon-del-conductor.alumnos contiene el id) porque es un salto
+// directo. Para "furgon", "auxiliar", "persona" y "licencia" NO se puede
+// verificar con la misma precision si el apoderado que pide leerlos
+// tiene realmente un alumno en ese furgon, sin iterar su lista de
+// alumnos (que las reglas no pueden hacer). Por eso esas colecciones
+// quedan con lectura abierta a cualquier usuario AUTENTICADO (ya es una
+// mejora grande vs. no tener reglas o tener reglas de prueba abiertas a
+// cualquiera), pero no aislada por dueño.
+//
+// Para cerrar ese hueco de verdad, la opcion mas simple es denormalizar:
+// agregar a furgon un array `apoderados_autorizados: [uid, uid, ...]`
+// que se actualice cuando se asigna/retira un alumno del furgon, y usar
+// ese array para las reglas de furgon/auxiliar/licencia/persona del
+// conductor. No lo hice porque implica tocar el flujo de asignacion de
+// alumnos a furgon, que no vi en el codigo revisado.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function esApoderado() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/apoderado/$(request.auth.uid));
+    }
+
+    function esConductor() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/conductor/$(request.auth.uid));
+    }
+
+    function idAlumnosDelApoderado() {
+      return get(/databases/$(database)/documents/apoderado/$(request.auth.uid)).data.id_alumnos;
+    }
+
+    function furgonDelConductor() {
+      return get(/databases/$(database)/documents/conductor/$(request.auth.uid)).data.id_furgon;
+    }
+
+    function alumnosDelFurgonDelConductor() {
+      return get(/databases/$(database)/documents/furgon/$(furgonDelConductor())).data.alumnos;
+    }
+
+    // Verificable con precision: persona propia del apoderado o del
+    // conductor autenticado. El caso "apoderado edita la persona de su
+    // alumno" (edit-alumno.page.ts) no se puede verificar con precision
+    // sin loops (ver limitacion arriba), asi que ahi solo exigimos que
+    // quien escribe sea un apoderado real, no cualquier autenticado.
+    function esPersonaPropia(personaId) {
+      return (esApoderado() &&
+          get(/databases/$(database)/documents/apoderado/$(request.auth.uid)).data.id_persona == personaId) ||
+        (esConductor() &&
+          get(/databases/$(database)/documents/conductor/$(request.auth.uid)).data.id_persona == personaId);
+    }
+
+    // apoderado/{uid} y conductor/{uid}: el id del documento ES el uid
+    // de Firebase Auth (ver auth.service.ts), asi que aqui si se puede
+    // restringir con precision.
+    match /apoderado/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /conductor/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // alumno/{id}: relacion directa y verificable en ambos sentidos.
+    match /alumno/{alumnoId} {
+      allow read, write: if signedIn() && (
+        (esApoderado() && alumnoId in idAlumnosDelApoderado()) ||
+        (esConductor() && alumnoId in alumnosDelFurgonDelConductor())
+      );
+    }
+
+    // furgon/auxiliar/persona/licencia: ver limitacion arriba. El
+    // conductor dueño del furgon si queda restringido con precision
+    // para escritura; lectura autenticada general como piso minimo.
+    match /furgon/{furgonId} {
+      allow read: if signedIn();
+      allow write: if esConductor() && furgonDelConductor() == furgonId;
+    }
+
+    match /auxiliar/{auxiliarId} {
+      allow read: if signedIn();
+      allow write: if esConductor() &&
+        auxiliarId in get(/databases/$(database)/documents/furgon/$(furgonDelConductor())).data.auxiliares;
+    }
+
+    match /persona/{personaId} {
+      allow read: if signedIn();
+      allow write: if esPersonaPropia(personaId) || esApoderado() || esConductor();
+    }
+
+    match /licencia/{licenciaId} {
+      allow read: if signedIn();
+      allow write: if esConductor() &&
+        get(/databases/$(database)/documents/conductor/$(request.auth.uid)).data.id_licencia == licenciaId;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

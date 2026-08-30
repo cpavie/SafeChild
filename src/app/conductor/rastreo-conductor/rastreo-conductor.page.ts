@@ -1,19 +1,18 @@
-import { Component, OnInit, OnDestroy, HostListener } from "@angular/core";
+import { Component, OnInit, OnDestroy } from "@angular/core";
 import * as Leaflet from "leaflet";
-import { Geolocation } from "@ionic-native/geolocation/ngx";
+import { Geolocation, Geoposition } from "@ionic-native/geolocation/ngx";
 import { DatosConductorService } from "src/app/servicios/datos-conductor.service";
 import { AngularFirestore } from "@angular/fire/firestore";
 import { Router } from "@angular/router";
 import {
   AlertController,
   ModalController,
-  Platform,
   ToastController,
 } from "@ionic/angular";
 import { AngularFireAuth } from "@angular/fire/auth";
-import { Subscription, interval, Observable, observable } from "rxjs";
+import { Subscription } from "rxjs";
+import { auditTime, filter } from "rxjs/operators";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
-import { exit } from "process";
 
 @Component({
   selector: "app-rastreo-conductor",
@@ -29,6 +28,10 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
   nombres_alumnos: Array<any> = [];
   sub: Subscription;
   layerGroup: any;
+  private popstateHandler = () => {
+    alert("finaliza la ruta!");
+    history.pushState(null, null, window.location.pathname);
+  };
 
   constructor(
     private geolocation: Geolocation,
@@ -40,19 +43,7 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     public alertController: AlertController,
     private modalController: ModalController
   ) {
-    //window.addEventListener('beforeunload', function (e) {
-    // e.preventDefault();
-    // e.returnValue = '';
-    // });
-
-    window.addEventListener(
-      "popstate",
-      function (event) {
-        alert("finaliza la ruta!");
-        history.pushState(null, null, window.location.pathname);
-      },
-      false
-    );
+    window.addEventListener("popstate", this.popstateHandler, false);
   }
 
   ngOnInit() {
@@ -69,10 +60,20 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
         this.leafletMap();
         this.nombres_alumnos = this.dataService.getNombresAlumnos();
         this.ids_alumnos = this.dataService.getIdsAlumnos();
-        this.sub = interval(6000).subscribe((func) => {
-          this.geolocation.getCurrentPosition().then((resp) => {
-            this.lat = resp.coords.latitude;
-            this.lon = resp.coords.longitude;
+
+        // watchPosition emite cuando el GPS reporta una posicion nueva
+        // (evento), no cada X segundos aunque el furgon este detenido.
+        // auditTime acota las escrituras a Firestore a como maximo una
+        // cada 5s aunque el GPS emita mas seguido.
+        this.sub = this.geolocation
+          .watchPosition({ enableHighAccuracy: true })
+          .pipe(
+            filter((pos): pos is Geoposition => !!(pos as Geoposition).coords),
+            auditTime(5000)
+          )
+          .subscribe((pos: Geoposition) => {
+            this.lat = pos.coords.latitude;
+            this.lon = pos.coords.longitude;
             this.db
               .collection("furgon")
               .doc(this.dataService.getDataConductor().id_furgon)
@@ -96,7 +97,6 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
               this.layerGroup
             );
           });
-        });
       },
       (err) => {
         console.log(err);
@@ -228,7 +228,13 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.map.remove();
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+    window.removeEventListener("popstate", this.popstateHandler, false);
+    if (this.map) {
+      this.map.remove();
+    }
   }
 
   async ayuda() {
