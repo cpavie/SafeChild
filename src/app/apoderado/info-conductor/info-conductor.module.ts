@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { SharedModule } from 'src/app/components/shared.module';
 
 import { InfoConductorPageRoutingModule } from './info-conductor-routing.module';
 
@@ -13,6 +14,7 @@ import { InfoConductorPage } from './info-conductor.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     InfoConductorPageRoutingModule
   ],
   declarations: [InfoConductorPage]

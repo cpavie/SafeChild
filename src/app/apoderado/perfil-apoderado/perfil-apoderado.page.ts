@@ -11,7 +11,6 @@ import {
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { ResetpasswordPage } from "src/app/resetpassword/resetpassword.page";
 import { Apoderado, Persona } from "src/app/models/safechild.models";
-import { ThemeService } from "src/app/servicios/theme.service";
 
 @Component({
   selector: "app-perfil-apoderado",
@@ -26,22 +25,13 @@ export class PerfilApoderadoPage implements OnInit {
     public dataService: DatosService,
     public alertController: AlertController,
     public toastController: ToastController,
-    private modalController: ModalController,
-    private themeService: ThemeService
+    private modalController: ModalController
   ) {}
 
   telefono: number;
   comuna: string;
   direccion: string;
   uid: string;
-
-  get isDark(): boolean {
-    return this.themeService.isDark();
-  }
-
-  onThemeToggle(event: CustomEvent) {
-    this.themeService.setMode(event.detail.checked ? "dark" : "light");
-  }
 
   ngOnInit() {}
 

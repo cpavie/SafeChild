@@ -2,6 +2,7 @@
   <ion-toolbar>
     <ion-title>Perfil</ion-title>
     <ion-buttons slot="end">
+      <app-theme-toggle></app-theme-toggle>
       <ion-button (click)="ayuda()">
         <ion-icon slot="icon-only" name="help-circle-outline"></ion-icon>
       </ion-button>
@@ -76,13 +77,5 @@
     <ion-button expand="block" fill="clear" shape="round" (click)="goResetPassword()">
       Cambiar contraseña
     </ion-button>
-  </div>
-
-  <div class="app-card">
-    <ion-item lines="none" class="theme-toggle-item">
-      <ion-icon slot="start" name="moon-outline"></ion-icon>
-      <ion-label>Modo oscuro</ion-label>
-      <ion-toggle [checked]="isDark" (ionChange)="onThemeToggle($event)"></ion-toggle>
-    </ion-item>
   </div>
 </ion-content>

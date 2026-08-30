@@ -11,7 +11,6 @@ import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { ResetpasswordPage } from "src/app/resetpassword/resetpassword.page";
 import { DatosService } from "src/app/servicios/datos.service";
 import { Conductor, Persona } from "src/app/models/safechild.models";
-import { ThemeService } from "src/app/servicios/theme.service";
 
 @Component({
   selector: "app-perfil-conductor",
@@ -26,22 +25,13 @@ export class PerfilConductorPage implements OnInit {
     public toastController: ToastController,
     public AFA: AngularFireAuth,
     public router: Router,
-    private modalController: ModalController,
-    private themeService: ThemeService
+    private modalController: ModalController
   ) {}
 
   comuna: string;
   telefono: number;
   direccion: string;
   uid: string;
-
-  get isDark(): boolean {
-    return this.themeService.isDark();
-  }
-
-  onThemeToggle(event: CustomEvent) {
-    this.themeService.setMode(event.detail.checked ? "dark" : "light");
-  }
 
   ngOnInit() {}
 

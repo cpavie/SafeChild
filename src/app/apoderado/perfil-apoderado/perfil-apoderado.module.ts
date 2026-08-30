@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { SharedModule } from 'src/app/components/shared.module';
 
 import { PerfilApoderadoPageRoutingModule } from './perfil-apoderado-routing.module';
 
@@ -13,6 +14,7 @@ import { PerfilApoderadoPage } from './perfil-apoderado.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     PerfilApoderadoPageRoutingModule
   ],
   declarations: [PerfilApoderadoPage]

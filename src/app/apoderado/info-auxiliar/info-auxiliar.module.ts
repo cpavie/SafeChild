@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { SharedModule } from 'src/app/components/shared.module';
 
 import { InfoAuxiliarPageRoutingModule } from './info-auxiliar-routing.module';
 
@@ -13,6 +14,7 @@ import { InfoAuxiliarPage } from './info-auxiliar.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    SharedModule,
     InfoAuxiliarPageRoutingModule
   ],
   declarations: [InfoAuxiliarPage]
