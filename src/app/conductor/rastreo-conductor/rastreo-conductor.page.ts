@@ -195,18 +195,25 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     });
     toast.present();
 
-    this.db
-      .collection("auxiliar")
-      .doc(this.dataService.getDataAuxiliar().id_auxiliar)
-      .update({
-        aux_estado: 0,
-      });
-    this.db
-      .collection("conductor")
-      .doc(this.dataService.getDataConductor().id_conductor)
-      .update({
-        con_estado: 0,
-      });
+    // batch en vez de dos update() independientes: si la app se
+    // cierra a mitad de camino, o ambos cambios quedan aplicados o
+    // ninguno, nunca un estado a medias (conductor libre pero
+    // auxiliar todavia "en ruta").
+    const batch = this.db.firestore.batch();
+    batch.update(
+      this.db
+        .collection("auxiliar")
+        .doc(this.dataService.getDataAuxiliar().id_auxiliar).ref,
+      { aux_estado: 0 }
+    );
+    batch.update(
+      this.db
+        .collection("conductor")
+        .doc(this.dataService.getDataConductor().id_conductor).ref,
+      { con_estado: 0 }
+    );
+    await batch.commit().catch(() => this.avisarErrorTracking());
+
     this.sub.unsubscribe();
     this.AFA.signOut();
     toast.onWillDismiss().then((a) => window.location.replace("/home"));
@@ -223,24 +230,30 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
         },
         {
           text: "Confirmar",
-          handler: (b) => {
-            this.db
-              .collection("auxiliar")
-              .doc(this.dataService.getDataAuxiliar().id_auxiliar)
-              .update({
-                aux_estado: 0,
-              });
-            this.db
-              .collection("conductor")
-              .doc(this.dataService.getDataConductor().id_conductor)
-              .update({
-                con_estado: 0,
-              });
+          handler: async (b) => {
+            // batch: conductor/auxiliar/alumnos deben quedar todos
+            // liberados juntos, no en updates independientes que
+            // pueden quedar a medias si la app se cierra.
+            const batch = this.db.firestore.batch();
+            batch.update(
+              this.db
+                .collection("auxiliar")
+                .doc(this.dataService.getDataAuxiliar().id_auxiliar).ref,
+              { aux_estado: 0 }
+            );
+            batch.update(
+              this.db
+                .collection("conductor")
+                .doc(this.dataService.getDataConductor().id_conductor).ref,
+              { con_estado: 0 }
+            );
             for (let i = 0; i < this.ids_alumnos.length; i++) {
-              this.db.collection("alumno").doc(this.ids_alumnos[i]).update({
-                alu_estado: 0,
-              });
+              batch.update(
+                this.db.collection("alumno").doc(this.ids_alumnos[i]).ref,
+                { alu_estado: 0 }
+              );
             }
+            await batch.commit().catch(() => this.avisarErrorTracking());
             this.AFA.signOut();
             this.router.navigate(["/home"]);
           },
