@@ -60,7 +60,8 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
           this.lat = this.coords[0];
           this.lon = this.coords[1];
           this.leafletMap();
-        });
+        })
+        .catch(() => this.avisarErrorCarga());
     }
   }
 
@@ -112,8 +113,10 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
                 .get()
                 .forEach((doc) => {
                   this.dataService.setDataConductorPersona(doc.data());
-                });
-            });
+                })
+                .catch(() => this.avisarErrorCarga());
+            })
+            .catch(() => this.avisarErrorCarga());
           for (let i = 0; i < this.id_aux.length; i++) {
             this.db
               .collection("auxiliar")
@@ -128,9 +131,11 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
                     .get()
                     .forEach((doc) => {
                       this.dataService.setDataAuxiliarPersona(doc.data());
-                    });
+                    })
+                    .catch(() => this.avisarErrorCarga());
                 }
-              });
+              })
+              .catch(() => this.avisarErrorCarga());
           }
         }
         if (!this.map) {
@@ -152,6 +157,26 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
           this.toastA();
         }
       });
+  }
+
+  private avisandoErrorCarga = false;
+
+  // Las cadenas de lecturas anidadas (conductor -> persona,
+  // auxiliar -> persona) no tenian manejo de error: si algo fallaba
+  // (permiso denegado, doc borrado), la UI quedaba a medio cargar sin
+  // avisar. El flag evita apilar un toast por cada lectura que falle.
+  private async avisarErrorCarga() {
+    if (this.avisandoErrorCarga) {
+      return;
+    }
+    this.avisandoErrorCarga = true;
+    const toast = await this.toastController.create({
+      header: "No se pudo cargar parte de la información. Intente de nuevo.",
+      duration: 4000,
+      color: "danger",
+    });
+    toast.onWillDismiss().then(() => (this.avisandoErrorCarga = false));
+    toast.present();
   }
 
   async toastA() {

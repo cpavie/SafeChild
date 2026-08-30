@@ -26,6 +26,10 @@ export class AuthService {
   }
 
   async login(email: string, password: string, type: string) {
+    if (type !== 'apoderado' && type !== 'conductor') {
+      alert('usuario, contraseña y/o tipo de usuario incorrecto');
+      return null;
+    }
     try {
       const res = await this.AFauth.signInWithEmailAndPassword(email, password);
       const roleDoc = await this.db.collection(type).doc(res.user.uid).get().toPromise();

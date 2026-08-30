@@ -53,6 +53,22 @@ export class InicioConductorPage implements OnInit {
     }
   }
 
+  private avisandoErrorCarga = false;
+
+  // Cadena de lecturas anidadas (conductor -> persona -> furgon ->
+  // auxiliar/alumno -> persona) sin manejo de error: si algo fallaba
+  // (permiso denegado, doc borrado), la pantalla quedaba a medio
+  // cargar sin avisar. Se agrega .catch() en cada nivel. El flag evita
+  // apilar un alert por cada lectura que falle.
+  private avisarErrorCarga() {
+    if (this.avisandoErrorCarga) {
+      return;
+    }
+    this.avisandoErrorCarga = true;
+    alert("No se pudo cargar parte de la información. Intente de nuevo.");
+    this.avisandoErrorCarga = false;
+  }
+
   getInfo() {
     this.db
       .collection("conductor")
@@ -86,8 +102,10 @@ export class InicioConductorPage implements OnInit {
                         .get()
                         .forEach((doc) => {
                           this.auxiliares_nombres[i] = doc.get("p_nombres");
-                        });
-                    });
+                        })
+                        .catch(() => this.avisarErrorCarga());
+                    })
+                    .catch(() => this.avisarErrorCarga());
                 }
                 this.id_alumnos = Object.values(doc.get("alumnos"));
                 for (let i = 0; i < this.id_alumnos.length; i++) {
@@ -103,12 +121,17 @@ export class InicioConductorPage implements OnInit {
                         .get()
                         .forEach((doc) => {
                           this.alumnos_nombres[i] = doc.get("p_nombres");
-                        });
-                    });
+                        })
+                        .catch(() => this.avisarErrorCarga());
+                    })
+                    .catch(() => this.avisarErrorCarga());
                 }
-              });
-          });
-      });
+              })
+              .catch(() => this.avisarErrorCarga());
+          })
+          .catch(() => this.avisarErrorCarga());
+      })
+      .catch(() => this.avisarErrorCarga());
   }
   comenzarRuta() {
     if (this.al_ids.length > 0) {

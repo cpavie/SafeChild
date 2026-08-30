@@ -56,7 +56,8 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
           .doc(this.dataService.getDataConductor().id_furgon)
           .update({
             fur_coordenadas: [this.lat, this.lon],
-          });
+          })
+          .catch(() => this.avisarErrorTracking());
         this.leafletMap();
         this.nombres_alumnos = this.dataService.getNombresAlumnos();
         this.ids_alumnos = this.dataService.getIdsAlumnos();
@@ -79,7 +80,8 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
               .doc(this.dataService.getDataConductor().id_furgon)
               .update({
                 fur_coordenadas: [this.lat, this.lon],
-              });
+              })
+              .catch(() => this.avisarErrorTracking());
             this.map.flyTo([this.lat, this.lon], 17);
 
             var myIcon = Leaflet.icon({
@@ -102,6 +104,27 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
         console.log(err);
       }
     );
+  }
+
+  private mostrandoErrorTracking = false;
+
+  // Si falla la escritura de fur_coordenadas (p.ej. sin conexion), el
+  // conductor no tenia forma de saber que dejo de transmitir su
+  // ubicacion mientras los apoderados ven el furgon "congelado". El
+  // flag evita apilar un toast por cada intento fallido cada 5s.
+  private async avisarErrorTracking() {
+    if (this.mostrandoErrorTracking) {
+      return;
+    }
+    this.mostrandoErrorTracking = true;
+    const toast = await this.toastController.create({
+      header: "Sin conexión: no se está transmitiendo la ubicación",
+      duration: 4000,
+      position: "top",
+      color: "danger",
+    });
+    toast.onWillDismiss().then(() => (this.mostrandoErrorTracking = false));
+    toast.present();
   }
 
   leafletMap() {
