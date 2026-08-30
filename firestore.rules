@@ -17,23 +17,21 @@ rules_version = '2';
 //
 // LIMITACION IMPORTANTE: el lenguaje de reglas de Firestore no permite
 // loops ni queries arbitrarias, solo get()/exists() de documentos
-// puntuales. Para "alumno" se puede verificar con precision la
-// pertenencia (apoderado.id_alumnos contiene el id, o
-// furgon-del-conductor.alumnos contiene el id) porque es un salto
-// directo. Para "furgon", "auxiliar", "persona" y "licencia" NO se puede
-// verificar con la misma precision si el apoderado que pide leerlos
-// tiene realmente un alumno en ese furgon, sin iterar su lista de
-// alumnos (que las reglas no pueden hacer). Por eso esas colecciones
-// quedan con lectura abierta a cualquier usuario AUTENTICADO (ya es una
-// mejora grande vs. no tener reglas o tener reglas de prueba abiertas a
-// cualquiera), pero no aislada por dueño.
+// puntuales, PERO si permite comparar dos arrays ya leidos con
+// list.hasAny(list) sin iterar. Eso alcanza para "furgon": el apoderado
+// esta autorizado si furgon.alumnos y apoderado.id_alumnos tienen algun
+// elemento en comun (ver esApoderadoDelFurgon() mas abajo) - sin tocar
+// el flujo de asignacion de alumnos a furgon ni agregar campos nuevos.
 //
-// Para cerrar ese hueco de verdad, la opcion mas simple es denormalizar:
-// agregar a furgon un array `apoderados_autorizados: [uid, uid, ...]`
-// que se actualice cuando se asigna/retira un alumno del furgon, y usar
-// ese array para las reglas de furgon/auxiliar/licencia/persona del
-// conductor. No lo hice porque implica tocar el flujo de asignacion de
-// alumnos a furgon, que no vi en el codigo revisado.
+// Para "auxiliar", "persona" y "licencia" el mismo truco no alcanza:
+// no hay un array en esos documentos para cruzar con id_alumnos del
+// apoderado (el esquema no guarda el furgon "dueño" en el propio doc
+// de auxiliar/licencia). Ahi si se necesitaria un campo de respaldo
+// (p.ej. `id_furgon` en auxiliar) o denormalizar
+// `apoderados_autorizados` en cada uno. Por eso esas tres colecciones
+// quedan por ahora con lectura abierta a cualquier usuario AUTENTICADO
+// (mejora grande vs. reglas de prueba abiertas a cualquiera, pero no
+// aislada por dueño para el lado apoderado).
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -62,6 +60,18 @@ service cloud.firestore {
 
     function alumnosDelFurgonDelConductor() {
       return get(/databases/$(database)/documents/furgon/$(furgonDelConductor())).data.alumnos;
+    }
+
+    // El apoderado esta autorizado a ver un furgon si al menos uno de
+    // sus alumnos (id_alumnos) esta en la lista de alumnos de ese
+    // furgon. hasAny() compara los dos arrays sin loop, asi que si es
+    // expresable en reglas (a diferencia de auxiliar/persona/licencia,
+    // ver comentario arriba).
+    function esApoderadoDelFurgon(furgonId) {
+      return esApoderado() &&
+        idAlumnosDelApoderado().hasAny(
+          get(/databases/$(database)/documents/furgon/$(furgonId)).data.alumnos
+        );
     }
 
     // Verificable con precision: persona propia del apoderado o del
@@ -97,13 +107,16 @@ service cloud.firestore {
       );
     }
 
-    // furgon/auxiliar/persona/licencia: ver limitacion arriba. El
-    // conductor dueño del furgon si queda restringido con precision
-    // para escritura; lectura autenticada general como piso minimo.
+    // furgon: lectura restringida con precision a su propio conductor
+    // o a un apoderado con al menos un alumno en ese furgon.
     match /furgon/{furgonId} {
-      allow read: if signedIn();
+      allow read: if esApoderadoDelFurgon(furgonId) ||
+        (esConductor() && furgonDelConductor() == furgonId);
       allow write: if esConductor() && furgonDelConductor() == furgonId;
     }
+
+    // auxiliar/persona/licencia: ver limitacion arriba, lectura
+    // autenticada general como piso minimo.
 
     match /auxiliar/{auxiliarId} {
       allow read: if signedIn();
