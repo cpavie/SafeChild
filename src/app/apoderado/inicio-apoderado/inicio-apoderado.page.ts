@@ -4,7 +4,7 @@ import { Router } from "@angular/router";
 import { AngularFirestore } from "@angular/fire/firestore";
 
 import { DatosService } from "../../servicios/datos.service";
-import { AlertController, ModalController } from "@ionic/angular";
+import { AlertController, ModalController, ToastController } from "@ionic/angular";
 import { EditAlumnoPage } from "../edit-alumno/edit-alumno.page";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 
@@ -29,8 +29,18 @@ export class InicioApoderadoPage implements OnInit {
     public db: AngularFirestore,
     public dataService: DatosService,
     public modalCtrl: ModalController,
-    public alertController: AlertController
+    public alertController: AlertController,
+    private toastController: ToastController
   ) {}
+
+  private async toast(message: string) {
+    const toast = await this.toastController.create({
+      message,
+      duration: 2500,
+      color: "medium",
+    });
+    toast.present();
+  }
 
   ngOnInit() {
     this.AFA.authState.forEach((res) => {
@@ -43,7 +53,7 @@ export class InicioApoderadoPage implements OnInit {
 
   editAlumno(id_alum: string) {
     if (id_alum == null) {
-      alert("seleccione un alumno para editar");
+      this.toast("seleccione un alumno para editar");
     } else
       this.db
         .collection("alumno")
@@ -117,7 +127,7 @@ export class InicioApoderadoPage implements OnInit {
 
   getInfoAlumno(id_alum: string) {
     if (id_alum == null) {
-      alert("seleccione un alumno para rastrear");
+      this.toast("seleccione un alumno para rastrear");
     } else
       this.db
         .collection("alumno")
@@ -145,7 +155,7 @@ export class InicioApoderadoPage implements OnInit {
                 ]);
               });
           } else {
-            alert("el alumno seleccionado no se encuentra en ruta");
+            this.toast("el alumno seleccionado no se encuentra en ruta");
           }
         });
   }

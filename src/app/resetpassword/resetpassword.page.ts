@@ -1,6 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/auth";
-import { ModalController } from "@ionic/angular";
+import { ModalController, ToastController } from "@ionic/angular";
 
 @Component({
   selector: "app-resetpassword",
@@ -12,27 +12,37 @@ export class ResetpasswordPage implements OnInit {
 
   constructor(
     private AFA: AngularFireAuth,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private toastController: ToastController
   ) {}
 
   dismiss() {
     this.modalCtrl.dismiss();
   }
 
+  private async toast(message: string, color: string = "medium") {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color,
+    });
+    toast.present();
+  }
+
   resetPassword() {
     this.AFA.sendPasswordResetEmail(this.correo)
-      .then(function () {
-        alert("Correo enviado correctamente");
+      .then(() => {
+        this.toast("Correo enviado correctamente", "success");
       })
-      .catch(async function (err) {
+      .catch((err) => {
         if (err.code == "auth/user-not-found") {
-          alert("Correo no encontrado en la aplicación");
+          this.toast("Correo no encontrado en la aplicación", "danger");
         }
         if (err.code == "auth/argument-error") {
-          alert("Inserte un correo valido");
+          this.toast("Inserte un correo valido", "danger");
         }
         if (err.code == "auth/invalid-email") {
-          alert("Inserte un correo valido");
+          this.toast("Inserte un correo valido", "danger");
         }
         console.log(err.code);
       });

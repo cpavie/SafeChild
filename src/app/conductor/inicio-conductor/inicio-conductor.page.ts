@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { AngularFirestore } from "@angular/fire/firestore";
 import { Router } from "@angular/router";
-import { AlertController, ModalController } from "@ionic/angular";
+import { AlertController, ModalController, ToastController } from "@ionic/angular";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { DatosConductorService } from "src/app/servicios/datos-conductor.service";
 
@@ -31,8 +31,18 @@ export class InicioConductorPage implements OnInit {
     public dataService: DatosConductorService,
     public router: Router,
     public alertController: AlertController,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private toastController: ToastController
   ) {}
+
+  private async toast(message: string, color: string = "medium") {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color,
+    });
+    toast.present();
+  }
 
   ngOnInit() {
     this.AFA.authState.forEach((res) => {
@@ -65,7 +75,7 @@ export class InicioConductorPage implements OnInit {
       return;
     }
     this.avisandoErrorCarga = true;
-    alert("No se pudo cargar parte de la información. Intente de nuevo.");
+    this.toast("No se pudo cargar parte de la información. Intente de nuevo.", "danger");
     this.avisandoErrorCarga = false;
   }
 
@@ -167,10 +177,10 @@ export class InicioConductorPage implements OnInit {
         });
         this.router.navigate(["/tabs-conductor/rastreo-conductor"]);
       } else {
-        alert("seleccione un auxiliar para comenzar");
+        this.toast("seleccione un auxiliar para comenzar");
       }
     } else {
-      alert("seleccione alumnos para comenzar la ruta");
+      this.toast("seleccione alumnos para comenzar la ruta");
     }
   }
 

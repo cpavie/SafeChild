@@ -30,7 +30,16 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
   sub: Subscription;
   layerGroup: any;
   private popstateHandler = () => {
-    alert("finaliza la ruta!");
+    // alert() bloqueaba el hilo de JS (y con el, cualquier herramienta
+    // que dependa de ejecutar script en la pagina) hasta que el
+    // usuario lo cerraba. El toast informa sin bloquear.
+    this.toastController
+      .create({
+        message: "Para salir, primero finalice la ruta",
+        duration: 2500,
+        color: "warning",
+      })
+      .then((toast) => toast.present());
     history.pushState(null, null, window.location.pathname);
   };
 

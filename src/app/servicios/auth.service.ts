@@ -11,7 +11,7 @@ import {
   Router
 } from "@angular/router";
 import {
-  AlertController
+  ToastController
 } from "@ionic/angular";
 
 @Injectable({
@@ -22,12 +22,21 @@ export class AuthService {
   constructor(private AFauth: AngularFireAuth,
     private db: AngularFirestore,
     private router: Router,
-    public alertcontroller: AlertController) {
+    private toastController: ToastController) {
+  }
+
+  private async avisarLoginInvalido() {
+    const toast = await this.toastController.create({
+      message: 'usuario, contraseña y/o tipo de usuario incorrecto',
+      duration: 3000,
+      color: 'danger',
+    });
+    toast.present();
   }
 
   async login(email: string, password: string, type: string) {
     if (type !== 'apoderado' && type !== 'conductor') {
-      alert('usuario, contraseña y/o tipo de usuario incorrecto');
+      this.avisarLoginInvalido();
       return null;
     }
     try {
@@ -37,13 +46,13 @@ export class AuthService {
         // El usuario se autenticó pero no tiene un documento del rol seleccionado:
         // cerramos la sesión para no dejarlo autenticado con un rol incorrecto.
         await this.AFauth.signOut();
-        alert('usuario, contraseña y/o tipo de usuario incorrecto');
+        this.avisarLoginInvalido();
         return null;
       }
       this.router.navigate([type === 'conductor' ? '/tabs-conductor' : '/tabs-apoderado']);
       return res.user.uid;
     } catch (err) {
-      alert('usuario, contraseña y/o tipo de usuario incorrecto');
+      this.avisarLoginInvalido();
       return null;
     }
   }
