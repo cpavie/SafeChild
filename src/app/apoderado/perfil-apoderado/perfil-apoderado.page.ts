@@ -30,8 +30,17 @@ export class PerfilApoderadoPage implements OnInit {
   telefono: number;
   comuna: string;
   direccion: string;
+  uid: string;
 
-  ngOnInit() {}
+  ngOnInit() {
+    // El id del documento apoderado/{uid} ES el uid de Firebase Auth
+    // (ver firestore.rules), no un campo id_apoderado dentro del doc.
+    this.AFA.currentUser.then((user) => {
+      if (user) {
+        this.uid = user.uid;
+      }
+    });
+  }
 
   ionViewWillEnter() {
     this.telefono = this.dataService.getDataApoderado().apo_telefono;
@@ -53,7 +62,7 @@ export class PerfilApoderadoPage implements OnInit {
           handler: (b) => {
             this.db
               .collection("apoderado")
-              .doc(this.dataService.getDataApoderado().id_apoderado)
+              .doc(this.uid)
               .update({
                 apo_telefono: this.telefono,
               })

@@ -146,6 +146,7 @@ export class InicioConductorPage implements OnInit {
         this.db.collection("auxiliar").doc(this.bind).update({
           aux_estado: 1,
         });
+        this.dataService.setIdAuxiliar(this.bind);
         this.dataService.ids_alumnos = this.al_ids;
         this.dataService.nombres_alumnos = this.al_nombres;
         // Se marca alu_estado solo para los alumnos realmente
@@ -157,12 +158,13 @@ export class InicioConductorPage implements OnInit {
             alu_estado: 1,
           });
         }
-        this.db
-          .collection("conductor")
-          .doc(this.dataService.getDataConductor().id_conductor)
-          .update({
-            con_estado: 1,
-          });
+        // El id del documento conductor/{uid} ES el uid de Firebase
+        // Auth (ver firestore.rules), no un campo id_conductor dentro
+        // del doc (ese campo no existe, doc(undefined) fallaba con
+        // permission-denied en silencio).
+        this.db.collection("conductor").doc(this.uid).update({
+          con_estado: 1,
+        });
         this.router.navigate(["/tabs-conductor/rastreo-conductor"]);
       } else {
         alert("seleccione un auxiliar para comenzar");

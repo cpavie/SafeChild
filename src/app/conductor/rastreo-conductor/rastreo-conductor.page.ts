@@ -20,6 +20,7 @@ import { AyudaPage } from "src/app/ayuda/ayuda.page";
   styleUrls: ["./rastreo-conductor.page.scss"],
 })
 export class RastreoConductorPage implements OnInit, OnDestroy {
+  uid: string;
   map: Leaflet.Map;
   lat: number;
   lon: number;
@@ -47,6 +48,15 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // El id del documento conductor/{uid} ES el uid de Firebase Auth
+    // (ver firestore.rules), no un campo id_conductor dentro del doc
+    // (ese campo no existe). Se guarda aparte para los updates propios
+    // de con_estado en toast()/logout().
+    this.AFA.currentUser.then((user) => {
+      if (user) {
+        this.uid = user.uid;
+      }
+    });
     this.geolocation.getCurrentPosition().then(
       (resp) => {
         this.lat = resp.coords.latitude;
@@ -160,14 +170,22 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
             this.db.collection("alumno").doc(bind).update({
               alu_estado: 0,
             });
+            // nombres_alumnos se recorta junto con ids_alumnos, en el
+            // mismo indice: estan pareados por posicion (ver el
+            // *ngFor en el template), asi que recortar solo uno
+            // desalinea los nombres mostrados con el resto de
+            // alumnos.
             const index = this.ids_alumnos.indexOf(bind);
-            this.ids_alumnos =
-              index > -1
-                ? [
-                    ...this.ids_alumnos.slice(0, index),
-                    ...this.ids_alumnos.slice(index + 1),
-                  ]
-                : this.ids_alumnos;
+            if (index > -1) {
+              this.ids_alumnos = [
+                ...this.ids_alumnos.slice(0, index),
+                ...this.ids_alumnos.slice(index + 1),
+              ];
+              this.nombres_alumnos = [
+                ...this.nombres_alumnos.slice(0, index),
+                ...this.nombres_alumnos.slice(index + 1),
+              ];
+            }
             if (!this.ids_alumnos?.length) {
               this.dataService.ids_alumnos.length = 0;
               this.dataService.nombres_alumnos.length = 0;
@@ -203,13 +221,11 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     batch.update(
       this.db
         .collection("auxiliar")
-        .doc(this.dataService.getDataAuxiliar().id_auxiliar).ref,
+        .doc(this.dataService.getIdAuxiliar()).ref,
       { aux_estado: 0 }
     );
     batch.update(
-      this.db
-        .collection("conductor")
-        .doc(this.dataService.getDataConductor().id_conductor).ref,
+      this.db.collection("conductor").doc(this.uid).ref,
       { con_estado: 0 }
     );
     await batch.commit().catch(() => this.avisarErrorTracking());
@@ -238,13 +254,11 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
             batch.update(
               this.db
                 .collection("auxiliar")
-                .doc(this.dataService.getDataAuxiliar().id_auxiliar).ref,
+                .doc(this.dataService.getIdAuxiliar()).ref,
               { aux_estado: 0 }
             );
             batch.update(
-              this.db
-                .collection("conductor")
-                .doc(this.dataService.getDataConductor().id_conductor).ref,
+              this.db.collection("conductor").doc(this.uid).ref,
               { con_estado: 0 }
             );
             for (let i = 0; i < this.ids_alumnos.length; i++) {

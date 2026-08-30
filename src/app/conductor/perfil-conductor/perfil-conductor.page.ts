@@ -30,8 +30,17 @@ export class PerfilConductorPage implements OnInit {
   comuna: string;
   telefono: number;
   direccion: string;
+  uid: string;
 
-  ngOnInit() {}
+  ngOnInit() {
+    // El id del documento conductor/{uid} ES el uid de Firebase Auth
+    // (ver firestore.rules), no un campo id_conductor dentro del doc.
+    this.AFA.currentUser.then((user) => {
+      if (user) {
+        this.uid = user.uid;
+      }
+    });
+  }
 
   ionViewWillEnter() {
     this.comuna = this.dataService.getDataConductorPersona().p_comuna;
@@ -53,7 +62,7 @@ export class PerfilConductorPage implements OnInit {
           handler: (b) => {
             this.db
               .collection("conductor")
-              .doc(this.dataService.getDataConductor().id_conductor)
+              .doc(this.uid)
               .update({
                 con_telefono: this.telefono,
               })
