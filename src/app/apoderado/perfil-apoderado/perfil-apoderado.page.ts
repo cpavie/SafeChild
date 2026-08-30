@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { AngularFirestore } from "@angular/fire/firestore";
 import { Router } from "@angular/router";
@@ -17,7 +17,7 @@ import { Apoderado, Persona } from "src/app/models/safechild.models";
   templateUrl: "./perfil-apoderado.page.html",
   styleUrls: ["./perfil-apoderado.page.scss"],
 })
-export class PerfilApoderadoPage implements OnInit {
+export class PerfilApoderadoPage implements OnInit, OnDestroy {
   constructor(
     public AFA: AngularFireAuth,
     public router: Router,
@@ -32,6 +32,11 @@ export class PerfilApoderadoPage implements OnInit {
   comuna: string;
   direccion: string;
   uid: string;
+  // Confirmacion en linea bajo los botones (ver .sc-inline-toast): el
+  // diseño la muestra donde el usuario acaba de tocar, en vez de un
+  // toast flotante al borde de la pantalla.
+  guardado = false;
+  private guardadoTimer: any;
 
   ngOnInit() {}
 
@@ -112,12 +117,14 @@ export class PerfilApoderadoPage implements OnInit {
     });
     await alert.present();
   }
-  async toast() {
-    const toast = await this.toastController.create({
-      header: "Datos guardados",
-      duration: 2000,
-    });
-    toast.present();
+  toast() {
+    this.guardado = true;
+    clearTimeout(this.guardadoTimer);
+    this.guardadoTimer = setTimeout(() => (this.guardado = false), 2500);
+  }
+
+  ngOnDestroy() {
+    clearTimeout(this.guardadoTimer);
   }
 
   async goResetPassword() {

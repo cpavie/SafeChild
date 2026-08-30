@@ -1,37 +1,19 @@
-.profile-card {
-  text-align: center;
-}
-
-.avatar {
-  margin: 0 auto 8px;
-  width: 96px;
-  height: 96px;
-  border: 3px solid var(--ion-color-primary);
-}
-
-.profile-name {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0 0 16px;
-}
-
-.app-list ion-item {
-  text-align: left;
-}
-
-.profile-actions {
+.perfil-identidad {
   display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin: 16px 0 4px;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 0 4px;
 }
 
-.profile-actions ion-button {
-  flex: 1;
-  margin: 0;
+.perfil-nombre {
+  font-family: "Manrope", "Inter", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--sc-text);
 }
 
-.theme-toggle-item {
-  --background: transparent;
-  --padding-start: 0;
+.perfil-meta {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--sc-muted);
 }

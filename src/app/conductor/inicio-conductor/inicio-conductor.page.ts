@@ -14,17 +14,17 @@ import { Auxiliar, Conductor, Furgon, Persona } from "src/app/models/safechild.m
 })
 export class InicioConductorPage implements OnInit {
   uid: string;
-  id_alumnos: Array<any> = [];
-  id_alumnos_p: Array<any> = [];
-  alumnos_nombres: Array<any> = [];
-  alumnos_select: Array<any> = [];
-  alums: Array<any> = [];
-  id_auxiliares: Array<any> = [];
-  id_auxiliares_p: Array<any> = [];
-  auxiliares_nombres: Array<any> = [];
+  // La seleccion vive en la propia fila (`on`) en vez de en tres arrays
+  // paralelos (ids / nombres / checkboxes) que antes podian
+  // desincronizarse entre si.
+  roster: Array<{
+    id: string;
+    nombre: string;
+    direccion: string;
+    on: boolean;
+  }> = [];
+  auxiliares: Array<{ id: string; nombre: string }> = [];
   bind: string;
-  al_nombres = [];
-  al_ids = [];
 
   constructor(
     public AFA: AngularFireAuth,
@@ -54,14 +54,12 @@ export class InicioConductorPage implements OnInit {
     });
   }
 
-  dataAlum(a, b) {
-    if (this.al_ids.includes(a)) {
-      this.al_nombres = this.al_nombres.filter((value) => value != b);
-      this.al_ids = this.al_ids.filter((value) => value != a);
-    } else {
-      this.al_nombres.push(b);
-      this.al_ids.push(a);
-    }
+  get seleccionados() {
+    return this.roster.filter((alumno) => alumno.on);
+  }
+
+  get puedeComenzar(): boolean {
+    return this.seleccionados.length > 0 && !!this.bind;
   }
 
   private avisandoErrorCarga = false;
@@ -99,44 +97,62 @@ export class InicioConductorPage implements OnInit {
               .get()
               .forEach((doc) => {
                 this.dataService.setdataFurgon(doc.data() as Furgon);
-                this.id_auxiliares = Object.values(doc.get("auxiliares"));
-                for (let i = 0; i < this.id_auxiliares.length; i++) {
+
+                const idsAuxiliares: string[] = Object.values(
+                  doc.get("auxiliares") || {}
+                );
+                this.auxiliares = idsAuxiliares.map((id) => ({ id, nombre: "" }));
+                idsAuxiliares.forEach((id, i) => {
                   this.db
                     .collection("auxiliar")
-                    .doc(this.id_auxiliares[i])
+                    .doc(id)
                     .get()
-                    .forEach((doc) => {
-                      this.id_auxiliares_p[i] = doc.get("id_persona");
+                    .forEach((auxDoc) => {
                       this.db
                         .collection("persona")
-                        .doc(this.id_auxiliares_p[i])
+                        .doc(auxDoc.get("id_persona"))
                         .get()
-                        .forEach((doc) => {
-                          this.auxiliares_nombres[i] = doc.get("p_nombres");
+                        .forEach((personaDoc) => {
+                          this.auxiliares[i].nombre =
+                            personaDoc.get("p_nombres") +
+                            " " +
+                            personaDoc.get("p_apellidos");
                         })
                         .catch(() => this.avisarErrorCarga());
                     })
                     .catch(() => this.avisarErrorCarga());
-                }
-                this.id_alumnos = Object.values(doc.get("alumnos"));
-                for (let i = 0; i < this.id_alumnos.length; i++) {
+                });
+
+                const idsAlumnos: string[] = Object.values(
+                  doc.get("alumnos") || {}
+                );
+                this.roster = idsAlumnos.map((id) => ({
+                  id,
+                  nombre: "",
+                  direccion: "",
+                  on: false,
+                }));
+                idsAlumnos.forEach((id, i) => {
                   this.db
                     .collection("alumno")
-                    .doc(this.id_alumnos[i])
+                    .doc(id)
                     .get()
-                    .forEach((doc) => {
-                      this.id_alumnos_p[i] = doc.get("id_persona");
+                    .forEach((alumnoDoc) => {
                       this.db
                         .collection("persona")
-                        .doc(this.id_alumnos_p[i])
+                        .doc(alumnoDoc.get("id_persona"))
                         .get()
-                        .forEach((doc) => {
-                          this.alumnos_nombres[i] = doc.get("p_nombres");
+                        .forEach((personaDoc) => {
+                          this.roster[i].nombre =
+                            personaDoc.get("p_nombres") +
+                            " " +
+                            personaDoc.get("p_apellidos");
+                          this.roster[i].direccion = personaDoc.get("p_direccion");
                         })
                         .catch(() => this.avisarErrorCarga());
                     })
                     .catch(() => this.avisarErrorCarga());
-                }
+                });
               })
               .catch(() => this.avisarErrorCarga());
           })
@@ -145,44 +161,57 @@ export class InicioConductorPage implements OnInit {
       .catch(() => this.avisarErrorCarga());
   }
   comenzarRuta() {
-    if (this.al_ids.length > 0) {
-      if (this.bind) {
-        this.db
-          .collection("auxiliar")
-          .doc(this.bind)
-          .get()
-          .forEach((doc) => {
-            this.dataService.setDataAuxiliar(doc.data() as Auxiliar);
-          });
-        this.db.collection("auxiliar").doc(this.bind).update({
-          aux_estado: 1,
-        });
-        this.dataService.setIdAuxiliar(this.bind);
-        this.dataService.ids_alumnos = this.al_ids;
-        this.dataService.nombres_alumnos = this.al_nombres;
-        // Se marca alu_estado solo para los alumnos realmente
-        // seleccionados (al_ids, mantenido por dataAlum()), no por
-        // indice de checkbox tocado (alums era sparse y no reflejaba
-        // el estado real de seleccion).
-        for (let i = 0; i < this.al_ids.length; i++) {
-          this.db.collection("alumno").doc(this.al_ids[i]).update({
-            alu_estado: 1,
+    const seleccionados = this.seleccionados;
+    if (seleccionados.length === 0) {
+      this.toast("seleccione alumnos para comenzar la ruta");
+      return;
+    }
+    if (!this.bind) {
+      this.toast("seleccione un auxiliar para comenzar");
+      return;
+    }
+
+    this.db
+      .collection("auxiliar")
+      .doc(this.bind)
+      .get()
+      .forEach((doc) => {
+        this.dataService.setDataAuxiliar(doc.data() as Auxiliar);
+        // La persona del auxiliar no se guardaba, asi que la cabecera
+        // del rastreo no podia nombrar a quien va a bordo. El nombre ya
+        // esta resuelto en el chip elegido: se reusa en vez de pedir
+        // otra vez la persona a Firestore.
+        const chip = this.auxiliares.find((a) => a.id === this.bind);
+        if (chip) {
+          const [nombres, ...apellidos] = chip.nombre.split(" ");
+          this.dataService.setDataAuxiliarPersona({
+            p_nombres: nombres,
+            p_apellidos: apellidos.join(" "),
           });
         }
-        // El id del documento conductor/{uid} ES el uid de Firebase
-        // Auth (ver firestore.rules), no un campo id_conductor dentro
-        // del doc (ese campo no existe, doc(undefined) fallaba con
-        // permission-denied en silencio).
-        this.db.collection("conductor").doc(this.uid).update({
-          con_estado: 1,
-        });
-        this.router.navigate(["/tabs-conductor/rastreo-conductor"]);
-      } else {
-        this.toast("seleccione un auxiliar para comenzar");
-      }
-    } else {
-      this.toast("seleccione alumnos para comenzar la ruta");
+      });
+    this.db.collection("auxiliar").doc(this.bind).update({
+      aux_estado: 1,
+    });
+    this.dataService.setIdAuxiliar(this.bind);
+    this.dataService.ids_alumnos = seleccionados.map((a) => a.id);
+    this.dataService.nombres_alumnos = seleccionados.map((a) => a.nombre);
+    // Se marca alu_estado solo para los alumnos realmente
+    // seleccionados, no por indice de checkbox tocado (el array de
+    // checkboxes era sparse y no reflejaba el estado real).
+    for (const alumno of seleccionados) {
+      this.db.collection("alumno").doc(alumno.id).update({
+        alu_estado: 1,
+      });
     }
+    // El id del documento conductor/{uid} ES el uid de Firebase
+    // Auth (ver firestore.rules), no un campo id_conductor dentro
+    // del doc (ese campo no existe, doc(undefined) fallaba con
+    // permission-denied en silencio).
+    this.db.collection("conductor").doc(this.uid).update({
+      con_estado: 1,
+    });
+    this.router.navigate(["/tabs-conductor/rastreo-conductor"]);
   }
 
   async logout() {

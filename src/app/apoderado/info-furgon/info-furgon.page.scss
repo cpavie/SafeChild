@@ -1,19 +1,12 @@
-.avatar {
-  margin: 0 auto 12px;
-  width: 96px;
-  height: 96px;
-  border: 3px solid var(--ion-color-primary);
+// El furgon no tiene foto de perfil como las personas: el icono se ve
+// mejor sobre el amarillo escolar que sobre el gris de avatar.
+.furgon-avatar {
+  background: var(--sc-yellow-bg);
 }
 
-.app-list ion-item {
-  text-align: left;
-}
-
-.permit-img {
-  width: 100%;
-  max-width: 280px;
+.furgon-avatar ion-icon.avatar-fallback {
+  color: var(--sc-yellow-fg);
+  inset: 22%;
+  width: auto;
   height: auto;
-  border-radius: 10px;
-  display: block;
-  margin: 0 auto 16px;
 }

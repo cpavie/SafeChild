@@ -1,5 +1,8 @@
-ion-tabs{
-    --ion-tab-bar-color: rgb(143, 143, 143);
-    --ion-tab-bar-background:#eef207;
-    --ion-tab-bar-color-selected: black;
+// La barra de pestañas toma sus colores del tema (ver global.scss y
+// theme/variables.scss). Antes fijaba aqui el amarillo #eef207, que
+// sobrescribia el tema y no tenia modo oscuro.
+ion-tabs {
+  --ion-tab-bar-background: var(--sc-surface);
+  --ion-tab-bar-color: var(--sc-muted-2);
+  --ion-tab-bar-color-selected: var(--ion-color-primary);
 }

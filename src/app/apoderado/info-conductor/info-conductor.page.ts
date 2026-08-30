@@ -29,7 +29,10 @@ export class InfoConductorPage implements OnInit {
       });
   }
 
-  dismiss() {
-    this.modalCtrl.dismiss();
+  // `ir` viaja de vuelta a rastreo-apoderado, que abre el modal de la
+  // pestaña pedida. Cambiar de pestaña aqui mismo obligaria a que esta
+  // pantalla cargara tambien los datos de auxiliar y furgon.
+  dismiss(ir?: "conductor" | "auxiliar" | "furgon") {
+    this.modalCtrl.dismiss(ir ? { ir } : undefined);
   }
 }

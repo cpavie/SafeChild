@@ -195,10 +195,17 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
   }
 
   leafletMap() {
-    this.map = Leaflet.map("map1").setView([this.lat, this.lon], 17);
+    // Sin los botones +/- de Leaflet: quedan bajo la tarjeta de vidrio
+    // que flota sobre el mapa, y en telefono el zoom se hace con pinza.
+    this.map = Leaflet.map("map1", { zoomControl: false }).setView(
+      [this.lat, this.lon],
+      17
+    );
     Leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      // Las teselas son de openstreetmap.org: la atribucion a Mapbox
+      // que habia aqui citaba a un proveedor que no se usa.
       attribution:
-        'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.map);
 
     var myIcon = Leaflet.icon({
@@ -211,6 +218,21 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
     Leaflet.marker([this.lat, this.lon], { icon: myIcon }).addTo(
       this.layerGroup
     );
+
+    // El mapa ya no vive en una tarjeta de alto fijo: ocupa el hueco que
+    // deja la hoja inferior. Leaflet mide el contenedor al crearse, asi
+    // que si el layout todavia no asento se queda con un alto de 0.
+    setTimeout(() => this.map && this.map.invalidateSize(), 0);
+  }
+
+  // El mapa sigue al furgon solo, pero el apoderado puede haberlo
+  // arrastrado para mirar el resto del recorrido: este boton lo trae de
+  // vuelta a la ultima posicion conocida sin esperar la proxima
+  // actualizacion de fur_coordenadas.
+  recentrar() {
+    if (this.map && this.lat != null && this.lon != null) {
+      this.map.flyTo([this.lat, this.lon], 17);
+    }
   }
 
   ngOnDestroy() {
@@ -226,35 +248,56 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
     }
   }
 
-  async goInfoConductor() {
-    const modal = await this.modalCtrl.create({
-      component: InfoConductorPage,
-      componentProps: {
-        dataConductor: this.dataService.getDataConductor(),
-        dataConductorPersona: this.dataService.getDataConductorPersona(),
-      },
-    });
-    await modal.present();
+  goInfoConductor() {
+    return this.abrirInfo("conductor");
   }
 
-  async goInfoAuxiliar() {
-    const modal = await this.modalCtrl.create({
-      component: InfoAuxiliarPage,
-      componentProps: {
-        dataAux: this.dataService.getDataAuxiliar(),
-        dataAuxPersona: this.dataService.getDataAuxiliarPersona(),
-      },
-    });
-    await modal.present();
+  goInfoAuxiliar() {
+    return this.abrirInfo("auxiliar");
   }
-  async goInfoFurgon() {
-    const modal = await this.modalCtrl.create({
-      component: InfoFurgonPage,
-      componentProps: {
-        dataFurgon: this.dataService.getdataFurgon(),
+
+  goInfoFurgon() {
+    return this.abrirInfo("furgon");
+  }
+
+  /*
+   * Las tres pantallas de info son una sola vista del diseño con tres
+   * pestañas, pero siguen siendo tres modales distintos (cada uno carga
+   * lo suyo: la licencia, el auxiliar en turno, el permiso). Al tocar
+   * otra pestaña el modal se cierra devolviendo {ir}, y aqui se abre el
+   * que corresponde; para el usuario es un cambio de pestaña.
+   */
+  private async abrirInfo(tab: "conductor" | "auxiliar" | "furgon") {
+    const componentes = {
+      conductor: {
+        component: InfoConductorPage,
+        componentProps: {
+          dataConductor: this.dataService.getDataConductor(),
+          dataConductorPersona: this.dataService.getDataConductorPersona(),
+        },
       },
-    });
+      auxiliar: {
+        component: InfoAuxiliarPage,
+        componentProps: {
+          dataAux: this.dataService.getDataAuxiliar(),
+          dataAuxPersona: this.dataService.getDataAuxiliarPersona(),
+        },
+      },
+      furgon: {
+        component: InfoFurgonPage,
+        componentProps: {
+          dataFurgon: this.dataService.getdataFurgon(),
+        },
+      },
+    };
+
+    const modal = await this.modalCtrl.create(componentes[tab]);
     await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data && data.ir) {
+      await this.abrirInfo(data.ir);
+    }
   }
   async logout() {
     const alert = await this.alertController.create({

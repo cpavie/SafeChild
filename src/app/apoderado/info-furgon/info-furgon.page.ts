@@ -16,7 +16,9 @@ export class InfoFurgonPage implements OnInit {
 
   ngOnInit() {}
 
-  dismiss() {
-    this.modalCtrl.dismiss();
+  // Ver info-conductor.page.ts: la pestaña pedida se resuelve en
+  // rastreo-apoderado, que es quien tiene los datos de las tres.
+  dismiss(ir?: "conductor" | "auxiliar" | "furgon") {
+    this.modalCtrl.dismiss(ir ? { ir } : undefined);
   }
 }

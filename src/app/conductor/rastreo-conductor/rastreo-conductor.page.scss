@@ -1,18 +1,22 @@
-.welcome-text {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin: 0 0 16px;
+.sc-map-fabs {
+  bottom: 24px;
 }
 
-.map-card {
-  margin: 0 16px 16px;
-  border-radius: var(--app-radius);
-  box-shadow: var(--app-shadow);
-  overflow: hidden;
+.sheet-avatar {
+  background: var(--sc-surface);
 }
 
-.map-el {
-  width: 100%;
-  height: 55vh;
+.abordo-rows {
+  margin-bottom: 12px;
+}
+
+.bajar-btn {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(var(--ion-color-secondary-rgb), 0.14);
+  color: var(--ion-color-secondary);
+  font-size: 0.69rem;
+  font-weight: 700;
+  cursor: pointer;
 }

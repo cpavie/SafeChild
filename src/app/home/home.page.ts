@@ -11,7 +11,12 @@ import { ResetpasswordPage } from "../resetpassword/resetpassword.page";
 export class HomePage {
   email: string;
   password: string;
-  type: string;
+  // El diseño muestra el rol siempre elegido (tarjeta activa), asi que
+  // parte en apoderado en vez de undefined: sin esto la primera
+  // tarjeta se veria seleccionada pero onSubmitLogin() reclamaria un
+  // campo vacio.
+  type = "apoderado";
+  passwordShown = false;
 
   constructor(
     private authService: AuthService,

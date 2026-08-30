@@ -1,10 +1,40 @@
-.welcome-text {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin: 0 0 16px;
+.roster-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 2px;
 }
 
-.select-item {
-  margin: 4px 0 18px;
+.roster-head .sc-section-title {
+  margin-bottom: 0;
+}
+
+.roster-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ion-color-primary);
+}
+
+.auxiliar-title {
+  margin-top: 10px;
+}
+
+.auxiliar-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comenzar-footer {
+  background: var(--sc-surface);
+  border-top: 1px solid var(--sc-line-soft);
+  padding: 12px 20px calc(env(safe-area-inset-bottom, 0px) + 12px);
+}
+
+.comenzar-hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--sc-muted-2);
+  text-align: center;
+  margin: 8px 0 0;
 }

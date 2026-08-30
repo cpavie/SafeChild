@@ -98,6 +98,32 @@
   /* radios/sombras compartidos por los estilos globales (ver global.scss) */
   --app-radius: 14px;
   --app-shadow: 0 2px 10px rgba(31, 39, 51, 0.08);
+
+  /*
+   * Tokens del sistema de diseno (canvas "SafeChild Moderno").
+   * Ionic solo expone --ion-color-*; estos cubren lo que el diseno usa
+   * y Ionic no tiene nombre para: la segunda superficie (chips, filas
+   * dentro de una tarjeta), el gris de etiquetas, el borde hairline,
+   * el vidrio de los overlays sobre el mapa y los colores del mapa.
+   */
+  --sc-surface: #ffffff;
+  --sc-surface-2: #f4f7fb;
+  --sc-text: #0f1b2d;
+  --sc-muted: #6b7686;
+  --sc-muted-2: #8a94a6;
+  --sc-line: rgba(15, 27, 45, 0.1);
+  --sc-line-soft: rgba(15, 27, 45, 0.07);
+  --sc-glass: rgba(255, 255, 255, 0.86);
+  --sc-handle: rgba(15, 27, 45, 0.16);
+  --sc-scrim: rgba(15, 27, 45, 0.4);
+  --sc-yellow-bg: #fff8e1;
+  --sc-yellow-fg: #c79600;
+  --sc-login-top: linear-gradient(180deg, #eaf0fd 0%, #f7f8fb 100%);
+
+  /* radios del diseno: tarjetas 20, campos 16, pastillas 999 */
+  --sc-radius-card: 20px;
+  --sc-radius-field: 16px;
+  --sc-radius-sheet: 28px;
 }
 
 body.dark-theme {
@@ -163,4 +189,18 @@ body.dark-theme {
   --ion-border-color: #263143;
 
   --app-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+
+  --sc-surface: #121c2c;
+  --sc-surface-2: #18243a;
+  --sc-text: #eef2f8;
+  --sc-muted: #93a0b3;
+  --sc-muted-2: #7d8798;
+  --sc-line: #263143;
+  --sc-line-soft: #263143;
+  --sc-glass: rgba(18, 28, 44, 0.86);
+  --sc-handle: rgba(255, 255, 255, 0.2);
+  --sc-scrim: rgba(0, 0, 0, 0.6);
+  --sc-yellow-bg: #2a2413;
+  --sc-yellow-fg: #e0ac08;
+  --sc-login-top: linear-gradient(180deg, #152238 0%, #0b1220 100%);
 }

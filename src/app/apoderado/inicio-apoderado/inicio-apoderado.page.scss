@@ -1,14 +1,66 @@
-.welcome-text {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin: 0 0 16px;
+.alumno-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
-.select-item {
-  margin-bottom: 18px;
+.alumno-id {
+  flex: 1;
+  min-width: 0;
 }
 
-ion-button {
-  margin-bottom: 10px;
+.alumno-nombre {
+  font-family: "Manrope", "Inter", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--sc-text);
+}
+
+.alumno-furgon {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--sc-muted);
+}
+
+.alumno-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alumno-actions > ion-button:not(.edit-btn) {
+  flex: 1;
+}
+
+// Estado inerte: mismo alto que el boton "Rastrear" para que la fila no
+// salte entre una tarjeta en ruta y una sin ruta.
+.alumno-sinruta {
+  flex: 1;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--sc-line);
+  border-radius: 999px;
+  font-family: "Manrope", "Inter", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--sc-muted-2);
+}
+
+.edit-btn {
+  --border-color: rgba(var(--ion-color-primary-rgb), 0.35);
+  --color: var(--ion-color-primary);
+  --padding-start: 0;
+  --padding-end: 0;
+  width: 46px;
+  flex: none;
+}
+
+.alumnos-vacio {
+  font-size: 0.88rem;
+  color: var(--sc-muted);
+  text-align: center;
+  margin: 24px 0;
 }

@@ -16,13 +16,15 @@ import { Apoderado, Furgon, Persona } from "src/app/models/safechild.models";
 })
 export class InicioApoderadoPage implements OnInit {
   uid: string;
-  alumnos_id: Array<any> = [];
-  alumnos_nombres: Array<any> = [];
-  alumnos_id_p: Array<any> = [];
-  bind: string;
-  apoderado_data: any = {};
-  alumno_data: any = {};
-  furgon_data: any = {};
+  // Una fila por alumno, ya resuelta: la tarjeta necesita el nombre
+  // (coleccion persona), la patente (coleccion furgon) y si va en ruta
+  // (alu_estado), datos que antes se pedian recien al pulsar "Rastrear".
+  alumnos: Array<{
+    id: string;
+    nombre: string;
+    patente: string;
+    enRuta: boolean;
+  }> = [];
 
   constructor(
     public AFA: AngularFireAuth,
@@ -86,6 +88,10 @@ export class InicioApoderadoPage implements OnInit {
   async goEdit() {
     const modal = await this.modalCtrl.create({
       component: EditAlumnoPage,
+      // El modal se presenta como hoja inferior: sin fondo propio, el
+      // velo semitransparente de la pagina deja ver el inicio detras
+      // (ver .sc-sheet-modal en global.scss).
+      cssClass: "sc-sheet-modal",
       componentProps: {
         dataAlumno: this.dataService.getDataAlumno(),
         dataAlumnoPersona: this.dataService.getDataAlumnoPersona(),
@@ -100,7 +106,7 @@ export class InicioApoderadoPage implements OnInit {
       .doc(this.uid)
       .get()
       .forEach((doc) => {
-        this.alumnos_id = Object.values(doc.get("id_alumnos"));
+        const ids: string[] = Object.values(doc.get("id_alumnos") || {});
         this.dataService.setDataApoderado(doc.data() as Apoderado);
         this.db
           .collection("persona")
@@ -109,24 +115,53 @@ export class InicioApoderadoPage implements OnInit {
           .forEach((doc) => {
             this.dataService.setDataApoderadoPersona(doc.data() as Persona);
           });
-        for (let i = 0; i < this.alumnos_id.length; i++) {
+
+        // Se crean las filas de una vez y luego cada consulta rellena la
+        // suya por indice: asi el orden de las tarjetas sigue el de
+        // id_alumnos y no el de llegada de las respuestas.
+        this.alumnos = ids.map((id) => ({
+          id,
+          nombre: "",
+          patente: "",
+          enRuta: false,
+        }));
+
+        ids.forEach((id, i) => {
           this.db
             .collection("alumno")
-            .doc(this.alumnos_id[i])
+            .doc(id)
             .get()
-            .forEach((doc) => {
-              this.alumnos_id_p[i] = doc.get("id_persona");
+            .forEach((alumnoDoc) => {
+              this.alumnos[i].enRuta = alumnoDoc.get("alu_estado") == 1;
               this.db
                 .collection("persona")
-                .doc(this.alumnos_id_p[i])
+                .doc(alumnoDoc.get("id_persona"))
                 .get()
-                .forEach((doc) => {
-                  this.alumnos_nombres[i] =
-                    doc.get("p_nombres") + " " + doc.get("p_apellidos");
+                .forEach((personaDoc) => {
+                  this.alumnos[i].nombre =
+                    personaDoc.get("p_nombres") +
+                    " " +
+                    personaDoc.get("p_apellidos");
+                });
+              this.db
+                .collection("furgon")
+                .doc(alumnoDoc.get("id_furgon"))
+                .get()
+                .forEach((furgonDoc) => {
+                  this.alumnos[i].patente = furgonDoc.get("fur_patente");
                 });
             });
-        }
+        });
       });
+  }
+
+  // El saludo del header cambia con la hora: es el unico dato de la
+  // cabecera que no viene de Firestore.
+  get saludo(): string {
+    const hora = new Date().getHours();
+    if (hora < 12) return "Buenos días";
+    if (hora < 20) return "Buenas tardes";
+    return "Buenas noches";
   }
 
   getInfoAlumno(id_alum: string) {

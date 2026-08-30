@@ -1,41 +1,71 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Información Furgón</ion-title>
-    <ion-buttons slot="end">
-      <app-theme-toggle></app-theme-toggle>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content>
-  <div class="app-card">
-    <ion-avatar class="avatar">
-      <ion-icon class="avatar-fallback" name="bus"></ion-icon>
-      <img
-        src="{{this.dataFurgon.fur_foto}}"
-        alt=""
-        onerror="this.style.display='none'"
-      />
-    </ion-avatar>
-
-    <ion-list class="app-list" lines="full">
-      <ion-item>
-        <ion-icon slot="start" name="people-outline"></ion-icon>
-        <ion-label>Capacidad del furgón</ion-label>
-        <ion-input value="{{this.dataFurgon.fur_capacidad}}" readonly></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-icon slot="start" name="pricetag-outline"></ion-icon>
-        <ion-label>Patente del furgón</ion-label>
-        <ion-input value="{{this.dataFurgon.fur_patente}}" readonly></ion-input>
-      </ion-item>
-    </ion-list>
-
-    <p class="app-section-title">Foto del permiso</p>
-    <img class="permit-img" src="{{this.dataFurgon.fur_fotopermiso}}" alt="" />
-
-    <ion-button color="medium" fill="outline" (click)="dismiss()" shape="round" expand="block">
-      Volver
+<ion-content class="info-content">
+  <div class="sc-detail-top">
+    <ion-button class="sc-icon-btn" (click)="dismiss()">
+      <ion-icon slot="icon-only" name="chevron-back"></ion-icon>
     </ion-button>
+    <div>
+      <div class="sc-detail-top-title">Quién va a bordo</div>
+      <div class="sc-detail-top-sub">Datos del equipo del furgón</div>
+    </div>
+  </div>
+
+  <div class="sc-detail-sheet">
+    <div class="sc-tabs">
+      <div class="sc-tab" (click)="dismiss('conductor')">Conductor</div>
+      <div class="sc-tab" (click)="dismiss('auxiliar')">Auxiliar</div>
+      <div class="sc-tab sc-tab--on">Furgón</div>
+    </div>
+
+    <div class="sc-detail-identity">
+      <div class="sc-avatar sc-avatar--lg sc-avatar--ring furgon-avatar">
+        <ion-icon class="avatar-fallback" name="bus"></ion-icon>
+        <img src="{{ dataFurgon.fur_foto }}" alt="" onerror="this.style.display='none'" />
+      </div>
+      <div>
+        <div class="sc-detail-name">{{ dataFurgon.fur_patente }}</div>
+        <div class="sc-detail-role">Furgón escolar</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sc-datarow">
+        <ion-icon name="people-outline"></ion-icon>
+        <span class="sc-datarow-label">Capacidad</span>
+        <span class="sc-datarow-value">{{ dataFurgon.fur_capacidad }} alumnos</span>
+      </div>
+      <div class="sc-datarow">
+        <ion-icon name="pricetag-outline"></ion-icon>
+        <span class="sc-datarow-label">Patente</span>
+        <span class="sc-datarow-value">{{ dataFurgon.fur_patente }}</span>
+      </div>
+      <div class="sc-datarow">
+        <ion-icon name="person-outline"></ion-icon>
+        <span class="sc-datarow-label">Conductor</span>
+        <span class="sc-datarow-value">
+          {{ dataService.getDataConductorPersona().p_nombres }}
+          {{ dataService.getDataConductorPersona().p_apellidos }}
+        </span>
+      </div>
+    </div>
+
+    <div class="sc-doc">
+      <p class="sc-section-title">Foto del permiso</p>
+      <div class="sc-doc-frame">
+        <img
+          *ngIf="dataFurgon.fur_fotopermiso"
+          [src]="dataFurgon.fur_fotopermiso"
+          alt="Permiso de circulación"
+        />
+        <span class="sc-doc-empty" *ngIf="!dataFurgon.fur_fotopermiso">
+          FOTO DEL PERMISO
+        </span>
+      </div>
+    </div>
+
+    <div class="sc-detail-back">
+      <ion-button class="sc-btn" expand="block" fill="outline" (click)="dismiss()">
+        Volver al mapa
+      </ion-button>
+    </div>
   </div>
 </ion-content>
