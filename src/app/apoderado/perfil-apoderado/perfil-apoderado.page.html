@@ -1,115 +1,76 @@
 <ion-header>
-  <ion-toolbar color="warning">
-    <ion-buttons>
-      <ion-title class="titulo">Perfil</ion-title>
-      <ion-button class="boton" (click)="logout()">
-        <ion-icon class="icono" name="log-out-outline"></ion-icon>
+  <ion-toolbar>
+    <ion-title>Perfil</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="ayuda()">
+        <ion-icon slot="icon-only" name="help-circle-outline"></ion-icon>
       </ion-button>
-      <ion-button class="boton" (click)="ayuda()">
-        <ion-icon class="icono" name="help-circle-outline"></ion-icon>
+      <ion-button (click)="logout()">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content color="warning">
-  <ion-item color="warning">
-    <ion-label>
-      Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
-    </ion-label>
-  </ion-item>
-  <ion-item color="warning">
+<ion-content>
+  <div class="app-card profile-card">
     <ion-avatar class="avatar">
-      <img
-        src="{{this.dataService.getDataApoderado().apo_fotoperfil}}"
-        alt=""
-      />
+      <img src="{{this.dataService.getDataApoderado().apo_fotoperfil}}" alt="" />
     </ion-avatar>
-  </ion-item>
-  <ion-item color="warning">
-    <ion-label><b>Nombres: </b></ion-label>
-    <ion-input
-      readonly
-      value="{{this.dataService.getDataApoderadoPersona().p_nombres}}"
-    ></ion-input>
-  </ion-item>
-  <ion-item color="warning">
-    <ion-label><b>Apellidos: </b></ion-label>
-    <ion-input
-      readonly
-      value="{{this.dataService.getDataApoderadoPersona().p_apellidos}}"
-    ></ion-input>
-  </ion-item>
-  <ion-item color="warning">
-    <ion-label><b>Fecha de nacimiento: </b></ion-label>
-    <ion-input
-      readonly
-      value="{{this.dataService.getDataApoderadoPersona().p_fecnac}}"
-    ></ion-input>
-  </ion-item>
-  <ion-item color="warning">
-    <ion-label><b>Correo: </b></ion-label>
-    <ion-input
-      readonly
-      value="{{this.dataService.getDataApoderado().apo_correo}}"
-    ></ion-input>
-  </ion-item>
-  <ion-item color="warning">
-    <ion-label for="direccion"><b>Dirección: </b></ion-label>
-    <ion-input
-      id="direccion"
-      [(ngModel)]="direccion"
-      value="{{this.direccion}}"
-    ></ion-input>
-  </ion-item>
-  <ion-item color="warning">
-    <ion-label for="comuna"><b>Comuna: </b></ion-label>
-    <ion-input
-      id="comuna"
-      [(ngModel)]="comuna"
-      value="{{this.comuna}}"
-    ></ion-input>
-  </ion-item>
-  <ion-item color="warning">
-    <ion-label for="comuna"><b>Telefono: </b></ion-label>
-    <ion-input
-      id="telefono"
-      inputmode="numeric"
-      [(ngModel)]="telefono"
-      value="{{this.telefono}}"
-    ></ion-input>
-  </ion-item>
-  <ion-button
-    (click)="goResetPassword()"
-    expand="block"
-    color="dark"
-    fill="clear"
-    shape="round"
-  >
-    Cambiar Contraseña
-  </ion-button>
-  <ion-item color="warning">
-    <ion-grid>
-      <ion-row>
-        <ion-col style="text-align: center">
-          <div>
-            <ion-button size="small" color="dark" shape="round" (click)="save()"
-              >Confirmar</ion-button
-            >
-          </div>
-        </ion-col>
-        <ion-col style="text-align: center">
-          <div>
-            <ion-button
-              size="small"
-              color="medium"
-              shape="round"
-              (click)="reset()"
-              >Cancelar</ion-button
-            >
-          </div>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-  </ion-item>
+    <h2 class="profile-name">
+      {{this.dataService.getDataApoderadoPersona().p_nombres}}
+    </h2>
+
+    <ion-list class="app-list" lines="full">
+      <ion-item>
+        <ion-label>Nombres</ion-label>
+        <ion-input readonly value="{{this.dataService.getDataApoderadoPersona().p_nombres}}"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label>Apellidos</ion-label>
+        <ion-input readonly value="{{this.dataService.getDataApoderadoPersona().p_apellidos}}"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label>Fecha de nacimiento</ion-label>
+        <ion-input readonly value="{{this.dataService.getDataApoderadoPersona().p_fecnac}}"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label>Correo</ion-label>
+        <ion-input readonly value="{{this.dataService.getDataApoderado().apo_correo}}"></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <p class="app-section-title">Datos editables</p>
+    <ion-list class="app-list" lines="full">
+      <ion-item>
+        <ion-label position="stacked">Dirección</ion-label>
+        <ion-input id="direccion" [(ngModel)]="direccion" value="{{this.direccion}}"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Comuna</ion-label>
+        <ion-input id="comuna" [(ngModel)]="comuna" value="{{this.comuna}}"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Teléfono</ion-label>
+        <ion-input id="telefono" inputmode="numeric" [(ngModel)]="telefono" value="{{this.telefono}}"></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <div class="profile-actions">
+      <ion-button shape="round" (click)="save()">Confirmar</ion-button>
+      <ion-button shape="round" color="medium" fill="outline" (click)="reset()">Cancelar</ion-button>
+    </div>
+
+    <ion-button expand="block" fill="clear" shape="round" (click)="goResetPassword()">
+      Cambiar contraseña
+    </ion-button>
+  </div>
+
+  <div class="app-card">
+    <ion-item lines="none" class="theme-toggle-item">
+      <ion-icon slot="start" name="moon-outline"></ion-icon>
+      <ion-label>Modo oscuro</ion-label>
+      <ion-toggle [checked]="isDark" (ionChange)="onThemeToggle($event)"></ion-toggle>
+    </ion-item>
+  </div>
 </ion-content>

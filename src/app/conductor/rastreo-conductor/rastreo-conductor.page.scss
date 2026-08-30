@@ -1,16 +1,18 @@
-.boton{
-    float:right;
+.welcome-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 16px;
 }
-.titulo{
-    float:left;
-    font-size: 1.3em;
+
+.map-card {
+  margin: 0 16px 16px;
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow);
+  overflow: hidden;
 }
-.icono{
-    zoom:1.5;
-}
-ion-content {
-    --padding-bottom: 10px;
-    --padding-end: 7%;
-    --padding-start: 7%;
-    --padding-top: 30px;
+
+.map-el {
+  width: 100%;
+  height: 55vh;
 }

@@ -1,20 +1,10 @@
-.boton{
-    float:right;
+.welcome-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 16px;
 }
-.titulo{
-    float:left;
-    font-size: 1.3em;
+
+.select-item {
+  margin: 4px 0 18px;
 }
-.icono{
-    zoom:1.5;
-}
-ion-content {
-    --padding-bottom: 10px;
-    --padding-end: 7%;
-    --padding-start: 7%;
-    --padding-top: 30px;
-}
- ion-list{
-     --ion-background-color:#eef207;
-     
- }

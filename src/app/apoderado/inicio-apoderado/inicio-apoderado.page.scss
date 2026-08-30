@@ -1,21 +1,14 @@
+.welcome-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 16px;
+}
 
-.boton{
-    float:right;
+.select-item {
+  margin-bottom: 18px;
 }
-.titulo{
-    float:left;
-    font-size: 1.3em;
-}
-.icono{
-    zoom:1.5;
-}
-ion-content {
-    --padding-bottom: 10px;
-    --padding-end: 8%;
-    --padding-start: 8%;
-    --padding-top: 30px;
-}
-.btnInicio{
-    padding-left:12%;
-    padding-right:12%;
+
+ion-button {
+  margin-bottom: 10px;
 }

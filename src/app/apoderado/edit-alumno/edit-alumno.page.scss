@@ -1,19 +1,23 @@
-ion-content {
-    --padding-bottom: 10px;
-    --padding-end: 8%;
-    --padding-start: 8%;
-    --padding-top: 30px;
+.welcome-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 4px;
 }
 
-.boton {
-    float: right;
+.editing-text {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  margin: 0 0 16px;
 }
 
-.titulo {
-    float: left;
-    font-size: 1.3em;
+.edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
 }
 
-.icono {
-    zoom: 1.5;
+.edit-actions ion-button {
+  flex: 1;
+  margin: 0;
 }

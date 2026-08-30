@@ -1,49 +1,41 @@
-<ion-content fullscreen="true" color="warning">
-  <ion-item color="warning">
-    <ion-title class="ion-text-center titulo">Iniciar sesión</ion-title>
-  </ion-item>
-  <br>
-  <img class="icon" src="../../assets/img/furgon01.png" alt="Logo furgon">
-  <br>
+<ion-content fullscreen="true">
+  <div class="login-wrap">
+    <div class="app-card login-card">
+      <img class="icon" src="../../assets/img/furgon01.png" alt="Logo furgon">
+      <h1 class="login-title">SafeChild</h1>
+      <p class="login-subtitle">Inicia sesión para continuar</p>
 
-  <ion-radio-group name="auto" value="apoderado" [(ngModel)]="type">
-    <ion-item color="warning">
-      <ion-label>Conductor</ion-label>
-      <ion-radio value="conductor"></ion-radio>
-    </ion-item>
-    <ion-item color="warning">
-      <ion-label>Apoderado</ion-label>
-      <ion-radio value="apoderado"></ion-radio>
-    </ion-item>
-  </ion-radio-group>
+      <ion-segment [(ngModel)]="type" value="apoderado" mode="ios" class="role-segment">
+        <ion-segment-button value="apoderado">
+          <ion-label>Apoderado</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="conductor">
+          <ion-label>Conductor</ion-label>
+        </ion-segment-button>
+      </ion-segment>
 
-  <ion-item-divider color="warning">
-  </ion-item-divider>
+      <ion-list class="app-list" lines="none">
+        <ion-item lines="none" class="login-item bordered-item">
+          <ion-label position="floating">Correo</ion-label>
+          <ion-input type="email" [(ngModel)]="email"></ion-input>
+        </ion-item>
+        <ion-item lines="none" class="login-item bordered-item">
+          <ion-label position="floating">Contraseña</ion-label>
+          <ion-input type="password" [(ngModel)]="password"></ion-input>
+        </ion-item>
+      </ion-list>
 
-  <ion-item color="warning">
-    <ion-label position="floating">Correo</ion-label>
-    <ion-input type="email" [(ngModel)]="email"></ion-input>
-  </ion-item>
-  <ion-item color="warning">
-    <ion-label position="floating">Contraseña</ion-label>
-    <ion-input type="password" [(ngModel)]="password"></ion-input>
-  </ion-item>
-  <br>
-  <ion-button color="dark" shape="round" (click)="onSubmitLogin()" expand="block">Ingresar</ion-button>
-  <div style="text-align: center;">
-    <ion-button (click)="goResetPassword()" expand="block" color=dark shape="round" fill="clear">
-      Olvide mi contraseña
-    </ion-button>
-  </div>      
-  <br>
-  <br>  
-    <ion-footer class="ion-padding ion-nowrap">
-    <ion-toolbar color="warning">
-      <ion-label style="white-space:pre-line; text-align: center; margin-bottom: 10px; margin-top: 50%">
-      Si olvidó su usuario o quiere contar con nuestro servicio <a
-        href="mailto: pavieclaudio@gmail.com">contactenos</a>!
-    </ion-label>
-    </ion-toolbar>
-  </ion-footer>  
+      <ion-button expand="block" shape="round" (click)="onSubmitLogin()">
+        Ingresar
+      </ion-button>
+      <ion-button expand="block" shape="round" fill="clear" (click)="goResetPassword()">
+        Olvidé mi contraseña
+      </ion-button>
+    </div>
 
+    <p class="login-footer">
+      Si olvidó su usuario o quiere contar con nuestro servicio
+      <a href="mailto:pavieclaudio@gmail.com">contáctenos</a>!
+    </p>
+  </div>
 </ion-content>

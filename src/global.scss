@@ -26,3 +26,88 @@
 @import "~@ionic/angular/css/flex-utils.css";
 
 @import "~leaflet/dist/leaflet.css";
+
+/*
+ * Sistema de diseño SafeChild
+ * ----------------------------------------------------------------------------
+ * Reemplaza el patron anterior de aplicar color="warning" (amarillo) a
+ * cada ion-content/ion-toolbar/ion-item de la app. Ahora el header usa
+ * el color de marca por defecto y el contenido vive sobre tarjetas
+ * (.app-card) contra el fondo neutro del tema (ver theme/variables.scss).
+ */
+
+ion-header ion-toolbar {
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+}
+
+ion-header ion-toolbar ion-back-button,
+ion-header ion-toolbar ion-icon {
+  color: var(--ion-color-primary-contrast);
+}
+
+ion-button {
+  --border-radius: 12px;
+  --box-shadow: none;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+ion-button[fill="solid"],
+ion-button:not([fill]) {
+  --box-shadow: 0 4px 14px rgba(var(--ion-color-primary-rgb), 0.28);
+}
+
+.app-card {
+  background: var(--ion-card-background);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow);
+  padding: 20px;
+  margin: 16px;
+}
+
+.app-card + .app-card {
+  margin-top: 0;
+}
+
+.app-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ion-color-medium);
+  margin: 0 0 8px 4px;
+}
+
+ion-list.app-list {
+  background: transparent;
+}
+
+ion-list.app-list ion-item {
+  --background: transparent;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+}
+
+/*
+ * ion-item con "fill=outline" real: en Ionic 5.5 (version instalada)
+ * ion-item no soporta la propiedad `fill` (llego recien en 5.6), asi
+ * que se dibuja el borde a mano en el elemento host.
+ */
+.bordered-item {
+  --background: var(--ion-item-background);
+  --border-radius: 10px;
+  border: 1px solid var(--ion-color-step-250, rgba(0, 0, 0, 0.15));
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+ion-tab-bar {
+  --background: var(--ion-toolbar-background);
+  border-top: 1px solid var(--ion-border-color, rgba(0, 0, 0, 0.06));
+}
+
+ion-tab-button {
+  --color-selected: var(--ion-color-primary);
+}
