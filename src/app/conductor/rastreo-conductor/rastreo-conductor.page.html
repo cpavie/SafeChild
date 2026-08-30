@@ -14,13 +14,17 @@
 
 <ion-content>
   <div class="app-card">
-    <p class="welcome-text">
-      Bienvenido {{this.dataService.getDataConductorPersona().p_nombres}}
-    </p>
+    <div class="card-header-row">
+      <p class="welcome-text">
+        Bienvenido {{this.dataService.getDataConductorPersona().p_nombres}}
+      </p>
+      <span class="status-badge">En ruta</span>
+    </div>
 
     <p class="app-section-title">Alumnos escogidos</p>
     <ion-list class="app-list" lines="full">
       <ion-item *ngFor="let item of this.ids_alumnos, let i = index">
+        <ion-icon slot="start" name="person-outline"></ion-icon>
         <ion-label>{{this.nombres_alumnos[i]}}</ion-label>
         <ion-button fill="clear" slot="end" (click)="finalizarRutaAlum(item)">
           <ion-icon slot="icon-only" name="chevron-down-outline"></ion-icon>

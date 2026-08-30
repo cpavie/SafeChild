@@ -21,6 +21,7 @@
     <p class="app-section-title">Seleccione alumnos para comenzar ruta</p>
     <ion-list class="app-list" lines="full">
       <ion-item *ngFor="let item of id_alumnos, let i = index">
+        <ion-icon slot="start" name="person-outline"></ion-icon>
         <ion-label>{{this.alumnos_nombres[i]}}</ion-label>
         <ion-checkbox
           slot="end"
@@ -32,6 +33,7 @@
 
     <p class="app-section-title">Auxiliar</p>
     <ion-item lines="none" class="select-item bordered-item">
+      <ion-icon slot="start" name="people-outline"></ion-icon>
       <ion-select
         placeholder="Seleccione un auxiliar"
         interface="action-sheet"
@@ -46,6 +48,7 @@
     </ion-item>
 
     <ion-button expand="block" shape="round" (click)="comenzarRuta()">
+      <ion-icon slot="start" name="play-outline"></ion-icon>
       Comenzar ruta
     </ion-button>
   </div>

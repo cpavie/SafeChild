@@ -14,9 +14,12 @@
 
 <ion-content>
   <div class="app-card">
-    <p class="welcome-text">
-      Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
-    </p>
+    <div class="card-header-row">
+      <p class="welcome-text">
+        Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
+      </p>
+      <span class="status-badge">En ruta</span>
+    </div>
     <p class="tracking-text">
       Usted está viendo el recorrido de {{this.dataService.getDataAlumnoPersona().p_nombres}}
     </p>
@@ -28,12 +31,15 @@
 
   <div class="app-card actions-card">
     <ion-button size="small" shape="round" expand="block" fill="outline" (click)="goInfoConductor()">
+      <ion-icon slot="start" name="person-outline"></ion-icon>
       Info conductor
     </ion-button>
     <ion-button size="small" shape="round" expand="block" fill="outline" (click)="goInfoAuxiliar()">
+      <ion-icon slot="start" name="people-outline"></ion-icon>
       Info auxiliar
     </ion-button>
     <ion-button size="small" shape="round" expand="block" fill="outline" (click)="goInfoFurgon()">
+      <ion-icon slot="start" name="bus-outline"></ion-icon>
       Info furgón
     </ion-button>
   </div>

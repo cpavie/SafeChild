@@ -15,7 +15,12 @@
 <ion-content>
   <div class="app-card profile-card">
     <ion-avatar class="avatar">
-      <img src="{{this.dataService.getDataApoderado().apo_fotoperfil}}" alt="" />
+      <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
+      <img
+        src="{{this.dataService.getDataApoderado().apo_fotoperfil}}"
+        alt=""
+        onerror="this.style.display='none'"
+      />
     </ion-avatar>
     <h2 class="profile-name">
       {{this.dataService.getDataApoderadoPersona().p_nombres}}
@@ -23,18 +28,22 @@
 
     <ion-list class="app-list" lines="full">
       <ion-item>
+        <ion-icon slot="start" name="person-outline"></ion-icon>
         <ion-label>Nombres</ion-label>
         <ion-input readonly value="{{this.dataService.getDataApoderadoPersona().p_nombres}}"></ion-input>
       </ion-item>
       <ion-item>
+        <ion-icon slot="start" name="person-outline"></ion-icon>
         <ion-label>Apellidos</ion-label>
         <ion-input readonly value="{{this.dataService.getDataApoderadoPersona().p_apellidos}}"></ion-input>
       </ion-item>
       <ion-item>
+        <ion-icon slot="start" name="calendar-outline"></ion-icon>
         <ion-label>Fecha de nacimiento</ion-label>
         <ion-input readonly value="{{this.dataService.getDataApoderadoPersona().p_fecnac}}"></ion-input>
       </ion-item>
       <ion-item>
+        <ion-icon slot="start" name="mail-outline"></ion-icon>
         <ion-label>Correo</ion-label>
         <ion-input readonly value="{{this.dataService.getDataApoderado().apo_correo}}"></ion-input>
       </ion-item>
@@ -43,14 +52,17 @@
     <p class="app-section-title">Datos editables</p>
     <ion-list class="app-list" lines="full">
       <ion-item>
+        <ion-icon slot="start" name="location-outline"></ion-icon>
         <ion-label position="stacked">Dirección</ion-label>
         <ion-input id="direccion" [(ngModel)]="direccion" value="{{this.direccion}}"></ion-input>
       </ion-item>
       <ion-item>
+        <ion-icon slot="start" name="map-outline"></ion-icon>
         <ion-label position="stacked">Comuna</ion-label>
         <ion-input id="comuna" [(ngModel)]="comuna" value="{{this.comuna}}"></ion-input>
       </ion-item>
       <ion-item>
+        <ion-icon slot="start" name="call-outline"></ion-icon>
         <ion-label position="stacked">Teléfono</ion-label>
         <ion-input id="telefono" inputmode="numeric" [(ngModel)]="telefono" value="{{this.telefono}}"></ion-input>
       </ion-item>

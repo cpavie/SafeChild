@@ -7,15 +7,22 @@
 <ion-content>
   <div class="app-card">
     <ion-avatar class="avatar">
-      <img src="{{this.dataFurgon.fur_foto}}" alt="" />
+      <ion-icon class="avatar-fallback" name="bus"></ion-icon>
+      <img
+        src="{{this.dataFurgon.fur_foto}}"
+        alt=""
+        onerror="this.style.display='none'"
+      />
     </ion-avatar>
 
     <ion-list class="app-list" lines="full">
       <ion-item>
+        <ion-icon slot="start" name="people-outline"></ion-icon>
         <ion-label>Capacidad del furgón</ion-label>
         <ion-input value="{{this.dataFurgon.fur_capacidad}}" readonly></ion-input>
       </ion-item>
       <ion-item>
+        <ion-icon slot="start" name="pricetag-outline"></ion-icon>
         <ion-label>Patente del furgón</ion-label>
         <ion-input value="{{this.dataFurgon.fur_patente}}" readonly></ion-input>
       </ion-item>
