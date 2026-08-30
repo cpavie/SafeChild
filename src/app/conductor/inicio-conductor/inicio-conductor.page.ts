@@ -1,4 +1,3 @@
-import { THIS_EXPR } from "@angular/compiler/src/output/output_ast";
 import { Component, OnInit } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { AngularFirestore } from "@angular/fire/firestore";
@@ -114,20 +113,24 @@ export class InicioConductorPage implements OnInit {
   comenzarRuta() {
     if (this.al_ids.length > 0) {
       if (this.bind) {
-        for (let i = 0; i < this.alums.length; i++) {
-          this.db
-            .collection("auxiliar")
-            .doc(this.bind)
-            .get()
-            .forEach((doc) => {
-              this.dataService.setDataAuxiliar(doc.data());
-            });
-          this.db.collection("auxiliar").doc(this.bind).update({
-            aux_estado: 1,
+        this.db
+          .collection("auxiliar")
+          .doc(this.bind)
+          .get()
+          .forEach((doc) => {
+            this.dataService.setDataAuxiliar(doc.data());
           });
-          this.dataService.ids_alumnos = this.al_ids;
-          this.dataService.nombres_alumnos = this.al_nombres;
-          this.db.collection("alumno").doc(this.id_alumnos[i]).update({
+        this.db.collection("auxiliar").doc(this.bind).update({
+          aux_estado: 1,
+        });
+        this.dataService.ids_alumnos = this.al_ids;
+        this.dataService.nombres_alumnos = this.al_nombres;
+        // Se marca alu_estado solo para los alumnos realmente
+        // seleccionados (al_ids, mantenido por dataAlum()), no por
+        // indice de checkbox tocado (alums era sparse y no reflejaba
+        // el estado real de seleccion).
+        for (let i = 0; i < this.al_ids.length; i++) {
+          this.db.collection("alumno").doc(this.al_ids[i]).update({
             alu_estado: 1,
           });
         }
@@ -143,9 +146,6 @@ export class InicioConductorPage implements OnInit {
       }
     } else {
       alert("seleccione alumnos para comenzar la ruta");
-    }
-    if (this.alums.length < this.dataService.ids_alumnos.length) {
-      this.dataService.ids_alumnos.length = 0;
     }
   }
 
