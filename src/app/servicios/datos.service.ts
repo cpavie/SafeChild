@@ -15,7 +15,40 @@ export class DatosService {
   dataConductorPersona:any={};
   logeado:number;
 
+  // Estado propio del flujo de ruta del conductor (comenzar/rastrear/
+  // finalizar). Antes vivia en un DatosConductorService separado, casi
+  // identico a este salvo por estos campos: se unificaron para no
+  // mantener dos servicios en paralelo con los mismos getters/setters.
+  ids_alumnos: Array<any> = [];
+  nombres_alumnos: Array<any> = [];
+  id_auxiliar: string;
+  iniciorastreo: number;
+
   constructor() { }
+
+  // El id del documento auxiliar/{id} no viene dentro del propio doc
+  // (dataAuxiliar = doc.data() no incluye su id), asi que se guarda
+  // aparte al elegir el auxiliar en inicio-conductor, para poder
+  // actualizarlo despues en rastreo-conductor (toast()/logout()).
+  setIdAuxiliar(id_auxiliar) {
+    this.id_auxiliar = id_auxiliar
+  }
+
+  getIdAuxiliar() {
+    return this.id_auxiliar
+  }
+
+  getNombresAlumnos(){
+    return this.nombres_alumnos
+  }
+
+  setIdsAlumnos(ids_alumnos){
+    this.ids_alumnos = ids_alumnos
+  }
+
+  getIdsAlumnos(){
+    return this.ids_alumnos
+  }
 
   setDataConductor(dataConductor){
     this.dataConductor = dataConductor

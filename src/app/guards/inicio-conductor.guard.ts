@@ -7,7 +7,7 @@ import {
 } from "@angular/router";
 import { ToastController } from "@ionic/angular";
 import { Observable } from "rxjs";
-import { DatosConductorService } from "../servicios/datos-conductor.service";
+import { DatosService } from "../servicios/datos.service";
 
 @Injectable({
   providedIn: "root",
@@ -15,7 +15,7 @@ import { DatosConductorService } from "../servicios/datos-conductor.service";
 export class InicioConductorGuard implements CanActivate {
   constructor(
     private toastController: ToastController,
-    public dataService: DatosConductorService
+    public dataService: DatosService
   ) {}
 
   async toast() {

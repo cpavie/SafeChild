@@ -9,7 +9,7 @@ import {
 } from "@ionic/angular";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { ResetpasswordPage } from "src/app/resetpassword/resetpassword.page";
-import { DatosConductorService } from "src/app/servicios/datos-conductor.service";
+import { DatosService } from "src/app/servicios/datos.service";
 
 @Component({
   selector: "app-perfil-conductor",
@@ -18,7 +18,7 @@ import { DatosConductorService } from "src/app/servicios/datos-conductor.service
 })
 export class PerfilConductorPage implements OnInit {
   constructor(
-    public dataService: DatosConductorService,
+    public dataService: DatosService,
     public alertController: AlertController,
     public db: AngularFirestore,
     public toastController: ToastController,

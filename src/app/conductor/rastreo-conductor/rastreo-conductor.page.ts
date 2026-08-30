@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import * as Leaflet from "leaflet";
 import { Geolocation, Geoposition } from "@ionic-native/geolocation/ngx";
-import { DatosConductorService } from "src/app/servicios/datos-conductor.service";
+import { DatosService } from "src/app/servicios/datos.service";
 import { AngularFirestore } from "@angular/fire/firestore";
 import { Router } from "@angular/router";
 import {
@@ -45,7 +45,7 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
 
   constructor(
     private geolocation: Geolocation,
-    public dataService: DatosConductorService,
+    public dataService: DatosService,
     public db: AngularFirestore,
     public router: Router,
     public toastController: ToastController,

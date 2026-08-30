@@ -4,7 +4,7 @@ import { AngularFirestore } from "@angular/fire/firestore";
 import { Router } from "@angular/router";
 import { AlertController, ModalController, ToastController } from "@ionic/angular";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
-import { DatosConductorService } from "src/app/servicios/datos-conductor.service";
+import { DatosService } from "src/app/servicios/datos.service";
 
 @Component({
   selector: "app-inicio-conductor",
@@ -28,7 +28,7 @@ export class InicioConductorPage implements OnInit {
   constructor(
     public AFA: AngularFireAuth,
     private db: AngularFirestore,
-    public dataService: DatosConductorService,
+    public dataService: DatosService,
     public router: Router,
     public alertController: AlertController,
     private modalController: ModalController,
