@@ -32,20 +32,49 @@ export class PerfilApoderadoPage implements OnInit {
   direccion: string;
   uid: string;
 
-  ngOnInit() {
+  ngOnInit() {}
+
+  // Se recarga desde Firestore (no solo desde el servicio en memoria)
+  // porque un F5 en esta pagina deja dataService vacio: guardar en
+  // ese estado sobreescribiria datos reales con undefined.
+  async ionViewWillEnter() {
+    const user = await this.AFA.currentUser;
+    if (!user) {
+      return;
+    }
     // El id del documento apoderado/{uid} ES el uid de Firebase Auth
     // (ver firestore.rules), no un campo id_apoderado dentro del doc.
-    this.AFA.currentUser.then((user) => {
-      if (user) {
-        this.uid = user.uid;
-      }
-    });
-  }
+    this.uid = user.uid;
 
-  ionViewWillEnter() {
-    this.telefono = this.dataService.getDataApoderado().apo_telefono;
-    this.comuna = this.dataService.getDataApoderadoPersona().p_comuna;
-    this.direccion = this.dataService.getDataApoderadoPersona().p_direccion;
+    try {
+      const apoderadoDoc = await this.db
+        .collection("apoderado")
+        .doc(this.uid)
+        .get()
+        .toPromise();
+      const apoderadoData: any = apoderadoDoc.data() || {};
+      this.dataService.setDataApoderado(apoderadoData);
+      this.telefono = apoderadoData.apo_telefono;
+
+      if (apoderadoData.id_persona) {
+        const personaDoc = await this.db
+          .collection("persona")
+          .doc(apoderadoData.id_persona)
+          .get()
+          .toPromise();
+        const personaData: any = personaDoc.data() || {};
+        this.dataService.setDataApoderadoPersona(personaData);
+        this.comuna = personaData.p_comuna;
+        this.direccion = personaData.p_direccion;
+      }
+    } catch (err) {
+      const toast = await this.toastController.create({
+        message: "No se pudo cargar el perfil. Intente de nuevo.",
+        duration: 3000,
+        color: "danger",
+      });
+      toast.present();
+    }
   }
 
   async save() {

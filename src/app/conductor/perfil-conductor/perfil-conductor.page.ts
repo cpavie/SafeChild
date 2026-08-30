@@ -32,20 +32,49 @@ export class PerfilConductorPage implements OnInit {
   direccion: string;
   uid: string;
 
-  ngOnInit() {
+  ngOnInit() {}
+
+  // Se recarga desde Firestore (no solo desde el servicio en memoria)
+  // porque un F5 en esta pagina deja dataService vacio: guardar en
+  // ese estado sobreescribiria datos reales con undefined.
+  async ionViewWillEnter() {
+    const user = await this.AFA.currentUser;
+    if (!user) {
+      return;
+    }
     // El id del documento conductor/{uid} ES el uid de Firebase Auth
     // (ver firestore.rules), no un campo id_conductor dentro del doc.
-    this.AFA.currentUser.then((user) => {
-      if (user) {
-        this.uid = user.uid;
-      }
-    });
-  }
+    this.uid = user.uid;
 
-  ionViewWillEnter() {
-    this.comuna = this.dataService.getDataConductorPersona().p_comuna;
-    this.direccion = this.dataService.getDataConductorPersona().p_direccion;
-    this.telefono = this.dataService.getDataConductor().con_telefono;
+    try {
+      const conductorDoc = await this.db
+        .collection("conductor")
+        .doc(this.uid)
+        .get()
+        .toPromise();
+      const conductorData: any = conductorDoc.data() || {};
+      this.dataService.setDataConductor(conductorData);
+      this.telefono = conductorData.con_telefono;
+
+      if (conductorData.id_persona) {
+        const personaDoc = await this.db
+          .collection("persona")
+          .doc(conductorData.id_persona)
+          .get()
+          .toPromise();
+        const personaData: any = personaDoc.data() || {};
+        this.dataService.setDataConductorPersona(personaData);
+        this.comuna = personaData.p_comuna;
+        this.direccion = personaData.p_direccion;
+      }
+    } catch (err) {
+      const toast = await this.toastController.create({
+        message: "No se pudo cargar el perfil. Intente de nuevo.",
+        duration: 3000,
+        color: "danger",
+      });
+      toast.present();
+    }
   }
 
   async save() {
