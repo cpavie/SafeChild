@@ -1,19 +1,2 @@
-.avatar {
-  margin: 0 auto 12px;
-  width: 96px;
-  height: 96px;
-  border: 3px solid var(--ion-color-primary);
-}
-
-.app-list ion-item {
-  text-align: left;
-}
-
-.permit-img {
-  width: 100%;
-  max-width: 280px;
-  height: auto;
-  border-radius: 10px;
-  display: block;
-  margin: 0 auto 16px;
-}
+// El layout de esta pantalla vive en global.scss (.sc-detail-*),
+// compartido con info-auxiliar e info-furgon.

@@ -1,47 +1,82 @@
-<ion-content fullscreen="true">
-  <div class="theme-toggle-fab">
-    <app-theme-toggle></app-theme-toggle>
+<ion-content fullscreen="true" class="login-content">
+  <div class="login-hero">
+    <img class="login-logo" src="assets/img/furgon01.png" alt="Furgón escolar" />
+    <h1 class="login-title">SafeChild</h1>
+    <p class="login-tagline">Sigue el furgón de tus niños en tiempo real</p>
   </div>
-  <div class="login-wrap">
-    <div class="app-card login-card">
-      <img class="icon" src="../../assets/img/furgon01.png" alt="Logo furgon">
-      <h1 class="login-title">SafeChild</h1>
-      <p class="login-subtitle">Inicia sesión para continuar</p>
 
-      <ion-segment [(ngModel)]="type" value="apoderado" mode="ios" class="role-segment">
-        <ion-segment-button value="apoderado">
-          <ion-label>Apoderado</ion-label>
-        </ion-segment-button>
-        <ion-segment-button value="conductor">
-          <ion-label>Conductor</ion-label>
-        </ion-segment-button>
-      </ion-segment>
+  <div class="login-body">
+    <!-- El rol dejo de ser un ion-segment: como decide a que app entra
+         el usuario, el diseño le da dos tarjetas con icono y una linea
+         que explica que hace cada rol. -->
+    <div class="role-grid">
+      <div
+        class="role-card"
+        [class.role-card--on]="type === 'apoderado'"
+        (click)="type = 'apoderado'"
+      >
+        <ion-icon name="people-outline"></ion-icon>
+        <span class="role-name">Apoderado</span>
+        <span class="role-desc">Rastreo y datos del alumno</span>
+      </div>
+      <div
+        class="role-card"
+        [class.role-card--on]="type === 'conductor'"
+        (click)="type = 'conductor'"
+      >
+        <ion-icon name="bus-outline"></ion-icon>
+        <span class="role-name">Conductor</span>
+        <span class="role-desc">Iniciar y cerrar ruta</span>
+      </div>
+    </div>
 
-      <ion-list class="app-list" lines="none">
-        <ion-item lines="none" class="login-item bordered-item">
-          <ion-icon slot="start" name="mail-outline"></ion-icon>
-          <ion-label position="floating">Correo</ion-label>
-          <ion-input type="email" [(ngModel)]="email"></ion-input>
-        </ion-item>
-        <ion-item lines="none" class="login-item bordered-item">
-          <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
-          <ion-label position="floating">Contraseña</ion-label>
-          <ion-input type="password" [(ngModel)]="password"></ion-input>
-        </ion-item>
-      </ion-list>
+    <div class="sc-fields">
+      <div class="sc-field">
+        <ion-icon name="mail-outline"></ion-icon>
+        <div class="sc-field-body">
+          <div class="sc-field-label">Correo</div>
+          <ion-input
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            [(ngModel)]="email"
+          ></ion-input>
+        </div>
+      </div>
+      <div class="sc-field">
+        <ion-icon name="lock-closed-outline"></ion-icon>
+        <div class="sc-field-body">
+          <div class="sc-field-label">Contraseña</div>
+          <ion-input
+            [type]="passwordShown ? 'text' : 'password'"
+            autocomplete="current-password"
+            [(ngModel)]="password"
+          ></ion-input>
+        </div>
+        <ion-icon
+          class="pw-toggle"
+          [name]="passwordShown ? 'eye-off-outline' : 'eye-outline'"
+          (click)="passwordShown = !passwordShown"
+        ></ion-icon>
+      </div>
+    </div>
 
-      <ion-button expand="block" shape="round" (click)="onSubmitLogin()">
-        <ion-icon slot="start" name="log-in-outline"></ion-icon>
-        Ingresar
+    <div class="login-actions">
+      <ion-button class="sc-btn sc-btn--tall" expand="block" (click)="onSubmitLogin()">
+        {{ type === 'conductor' ? 'Ingresar como conductor' : 'Ingresar' }}
+        <ion-icon slot="end" name="arrow-forward"></ion-icon>
       </ion-button>
-      <ion-button expand="block" shape="round" fill="clear" (click)="goResetPassword()">
+      <ion-button class="sc-btn" expand="block" fill="clear" (click)="goResetPassword()">
         Olvidé mi contraseña
       </ion-button>
     </div>
 
-    <p class="login-footer">
-      Si olvidó su usuario o quiere contar con nuestro servicio
-      <a href="mailto:pavieclaudio@gmail.com">contáctenos</a>!
-    </p>
+    <div class="login-footer">
+      <app-theme-toggle variant="chip"></app-theme-toggle>
+      <p>
+        ¿Quiere contar con nuestro servicio?<br />
+        <a href="mailto:pavieclaudio@gmail.com">Contáctenos</a>
+      </p>
+    </div>
   </div>
 </ion-content>

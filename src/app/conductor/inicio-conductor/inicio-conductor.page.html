@@ -1,56 +1,78 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Inicio</ion-title>
-    <ion-buttons slot="end">
+    <div class="sc-header-row">
+      <div class="sc-header-titles">
+        <p class="sc-eyebrow">Conductor</p>
+        <p class="sc-title">{{ dataService.getDataConductorPersona().p_nombres }}</p>
+      </div>
       <app-theme-toggle></app-theme-toggle>
-      <ion-button (click)="ayuda()">
+      <ion-button class="sc-icon-btn" (click)="ayuda()">
         <ion-icon slot="icon-only" name="help-circle-outline"></ion-icon>
       </ion-button>
-      <ion-button (click)="logout()">
+      <ion-button class="sc-icon-btn" (click)="logout()">
         <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
       </ion-button>
-    </ion-buttons>
+    </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <div class="app-card">
-    <p class="welcome-text">
-      Bienvenido {{this.dataService.getDataConductorPersona().p_nombres}}
-    </p>
+  <div class="sc-stack">
+    <div class="roster-head">
+      <p class="sc-section-title">Alumnos de hoy</p>
+      <span class="roster-count">{{ seleccionados.length }} de {{ roster.length }} seleccionados</span>
+    </div>
 
-    <p class="app-section-title">Seleccione alumnos para comenzar ruta</p>
-    <ion-list class="app-list" lines="full">
-      <ion-item *ngFor="let item of id_alumnos, let i = index">
-        <ion-icon slot="start" name="person-outline"></ion-icon>
-        <ion-label>{{this.alumnos_nombres[i]}}</ion-label>
-        <ion-checkbox
-          slot="end"
-          [(ngModel)]="alums[i]"
-          (click)="dataAlum(item, this.alumnos_nombres[i])"
-        ></ion-checkbox>
-      </ion-item>
-    </ion-list>
-
-    <p class="app-section-title">Auxiliar</p>
-    <ion-item lines="none" class="select-item bordered-item">
-      <ion-icon slot="start" name="people-outline"></ion-icon>
-      <ion-select
-        placeholder="Seleccione un auxiliar"
-        interface="action-sheet"
-        [(ngModel)]="bind"
+    <!-- La fila entera es el area de toque, no solo la casilla: el
+         conductor marca alumnos de pie y en movimiento. -->
+    <div class="sc-rows">
+      <div
+        class="sc-row sc-row--bordered"
+        [class.sc-row--selected]="alumno.on"
+        *ngFor="let alumno of roster"
+        (click)="alumno.on = !alumno.on"
       >
-        <ion-select-option
-          *ngFor="let item of id_auxiliares, let i = index"
-          value="{{id_auxiliares[i]}}"
-          >{{auxiliares_nombres[i]}}</ion-select-option
-        >
-      </ion-select>
-    </ion-item>
+        <div class="sc-avatar sc-avatar--sm">
+          <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
+        </div>
+        <div class="sc-row-body">
+          <div class="sc-row-title">{{ alumno.nombre }}</div>
+          <div class="sc-row-sub">{{ alumno.direccion }}</div>
+        </div>
+        <div class="sc-check" [class.sc-check--on]="alumno.on">
+          <ion-icon *ngIf="alumno.on" name="checkmark"></ion-icon>
+        </div>
+      </div>
+    </div>
 
-    <ion-button expand="block" shape="round" (click)="comenzarRuta()">
-      <ion-icon slot="start" name="play-outline"></ion-icon>
-      Comenzar ruta
-    </ion-button>
+    <p class="sc-section-title auxiliar-title">Auxiliar a bordo</p>
+    <div class="auxiliar-chips">
+      <div
+        class="sc-chip"
+        [class.sc-chip--on]="bind === auxiliar.id"
+        *ngFor="let auxiliar of auxiliares"
+        (click)="bind = auxiliar.id"
+      >
+        <ion-icon name="people-outline"></ion-icon>
+        <span>{{ auxiliar.nombre }}</span>
+      </div>
+    </div>
   </div>
 </ion-content>
+
+<!-- El CTA vive fijo al pie, fuera del scroll: es la unica accion de la
+     pantalla y no debe quedar bajo la lista de alumnos. -->
+<ion-footer class="comenzar-footer">
+  <ion-button
+    class="sc-btn sc-btn--tall"
+    expand="block"
+    [disabled]="!puedeComenzar"
+    (click)="comenzarRuta()"
+  >
+    <ion-icon slot="start" name="play"></ion-icon>
+    Comenzar ruta
+  </ion-button>
+  <p class="comenzar-hint" *ngIf="!puedeComenzar">
+    Seleccione alumnos y un auxiliar para comenzar
+  </p>
+</ion-footer>

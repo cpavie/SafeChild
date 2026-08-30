@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { AngularFirestore } from "@angular/fire/firestore";
 import { Router } from "@angular/router";
@@ -10,14 +10,14 @@ import {
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { ResetpasswordPage } from "src/app/resetpassword/resetpassword.page";
 import { DatosService } from "src/app/servicios/datos.service";
-import { Conductor, Persona } from "src/app/models/safechild.models";
+import { Conductor, Furgon, Persona } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-perfil-conductor",
   templateUrl: "./perfil-conductor.page.html",
   styleUrls: ["./perfil-conductor.page.scss"],
 })
-export class PerfilConductorPage implements OnInit {
+export class PerfilConductorPage implements OnInit, OnDestroy {
   constructor(
     public dataService: DatosService,
     public alertController: AlertController,
@@ -32,6 +32,9 @@ export class PerfilConductorPage implements OnInit {
   telefono: number;
   direccion: string;
   uid: string;
+  // Confirmacion en linea bajo los botones (ver .sc-inline-toast).
+  guardado = false;
+  private guardadoTimer: any;
 
   ngOnInit() {}
 
@@ -67,6 +70,18 @@ export class PerfilConductorPage implements OnInit {
         this.dataService.setDataConductorPersona(personaData);
         this.comuna = personaData.p_comuna;
         this.direccion = personaData.p_direccion;
+      }
+
+      // El furgon asignado se muestra en esta pantalla, asi que se
+      // carga aqui tambien: tras un F5 el servicio en memoria esta
+      // vacio y la tarjeta quedaria sin patente ni capacidad.
+      if (conductorData.id_furgon) {
+        const furgonDoc = await this.db
+          .collection("furgon")
+          .doc(conductorData.id_furgon)
+          .get()
+          .toPromise();
+        this.dataService.setdataFurgon((furgonDoc.data() || {}) as Furgon);
       }
     } catch (err) {
       const toast = await this.toastController.create({
@@ -112,12 +127,14 @@ export class PerfilConductorPage implements OnInit {
     });
     await alert.present();
   }
-  async toast() {
-    const toast = await this.toastController.create({
-      header: "Datos guardados",
-      duration: 2000,
-    });
-    toast.present();
+  toast() {
+    this.guardado = true;
+    clearTimeout(this.guardadoTimer);
+    this.guardadoTimer = setTimeout(() => (this.guardado = false), 2500);
+  }
+
+  ngOnDestroy() {
+    clearTimeout(this.guardadoTimer);
   }
 
   async goResetPassword() {

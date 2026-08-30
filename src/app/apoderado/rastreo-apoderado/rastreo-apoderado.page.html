@@ -1,47 +1,88 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Rastreo</ion-title>
-    <ion-buttons slot="end">
-      <app-theme-toggle></app-theme-toggle>
-      <ion-button (click)="ayuda()">
-        <ion-icon slot="icon-only" name="help-circle-outline"></ion-icon>
-      </ion-button>
-      <ion-button (click)="logout()">
-        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<!-- Sin ion-header: el diseño da el mapa a pantalla completa y pone la
+     identificacion del alumno en una tarjeta de vidrio flotante. -->
+<ion-content fullscreen="true" scroll-y="false">
+  <div class="sc-map-layout">
+    <div class="sc-map-wrap">
+      <div id="map1" class="sc-map"></div>
 
-<ion-content>
-  <div class="app-card">
-    <div class="card-header-row">
-      <p class="welcome-text">
-        Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
-      </p>
-      <span class="status-badge">En ruta</span>
+      <div class="sc-map-overlay sc-glass">
+        <div class="sc-avatar sc-avatar--sm">
+          <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
+        </div>
+        <div class="sc-row-body">
+          <div class="sc-row-title">
+            {{ dataService.getDataAlumnoPersona().p_nombres }}
+            {{ dataService.getDataAlumnoPersona().p_apellidos }}
+          </div>
+          <div class="sc-row-sub">Furgón {{ dataService.getdataFurgon().fur_patente }}</div>
+        </div>
+        <span class="sc-badge">En ruta</span>
+      </div>
+
+      <div class="sc-map-fabs">
+        <div class="sc-map-fab sc-glass" (click)="recentrar()">
+          <ion-icon name="locate-outline"></ion-icon>
+        </div>
+        <app-theme-toggle variant="fab"></app-theme-toggle>
+        <div class="sc-map-fab sc-glass" (click)="ayuda()">
+          <ion-icon name="help-circle-outline"></ion-icon>
+        </div>
+        <div class="sc-map-fab sc-glass" (click)="logout()">
+          <ion-icon name="log-out-outline"></ion-icon>
+        </div>
+      </div>
     </div>
-    <p class="tracking-text">
-      Usted está viendo el recorrido de {{this.dataService.getDataAlumnoPersona().p_nombres}}
-    </p>
-  </div>
 
-  <div class="map-card">
-    <div id="map1" class="map-el"></div>
-  </div>
+    <!-- Hoja inferior: quien va a bordo. Reemplaza los tres botones
+         "Info ..." apilados, que no mostraban nada hasta abrirlos. -->
+    <div class="sc-sheet">
+      <div class="sc-sheet-handle"></div>
+      <div class="sc-sheet-body">
+      <div class="sc-rows">
+        <div class="sc-row" (click)="goInfoConductor()">
+          <div class="sc-avatar sc-avatar--sm sheet-avatar">
+            <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
+          </div>
+          <div class="sc-row-body">
+            <div class="sc-row-title">
+              {{ dataService.getDataConductorPersona().p_nombres }}
+              {{ dataService.getDataConductorPersona().p_apellidos }}
+            </div>
+            <div class="sc-row-sub">
+              Conductor · {{ dataService.getDataConductor().con_telefono }}
+            </div>
+          </div>
+          <ion-icon class="sc-row-chevron" name="chevron-forward"></ion-icon>
+        </div>
 
-  <div class="app-card actions-card">
-    <ion-button size="small" shape="round" expand="block" fill="outline" (click)="goInfoConductor()">
-      <ion-icon slot="start" name="person-outline"></ion-icon>
-      Info conductor
-    </ion-button>
-    <ion-button size="small" shape="round" expand="block" fill="outline" (click)="goInfoAuxiliar()">
-      <ion-icon slot="start" name="people-outline"></ion-icon>
-      Info auxiliar
-    </ion-button>
-    <ion-button size="small" shape="round" expand="block" fill="outline" (click)="goInfoFurgon()">
-      <ion-icon slot="start" name="bus-outline"></ion-icon>
-      Info furgón
-    </ion-button>
+        <div class="sc-row" (click)="goInfoAuxiliar()">
+          <div class="sc-avatar sc-avatar--sm sheet-avatar">
+            <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
+          </div>
+          <div class="sc-row-body">
+            <div class="sc-row-title">
+              {{ dataService.getDataAuxiliarPersona().p_nombres }}
+              {{ dataService.getDataAuxiliarPersona().p_apellidos }}
+            </div>
+            <div class="sc-row-sub">Auxiliar a bordo</div>
+          </div>
+          <ion-icon class="sc-row-chevron" name="chevron-forward"></ion-icon>
+        </div>
+
+        <div class="sc-row sc-row--accent" (click)="goInfoFurgon()">
+          <div class="sc-avatar sc-avatar--sm sheet-avatar furgon-avatar">
+            <ion-icon name="bus"></ion-icon>
+          </div>
+          <div class="sc-row-body">
+            <div class="sc-row-title">{{ dataService.getdataFurgon().fur_patente }}</div>
+            <div class="sc-row-sub">
+              Capacidad {{ dataService.getdataFurgon().fur_capacidad }}
+            </div>
+          </div>
+          <ion-icon class="sc-row-chevron" name="chevron-forward"></ion-icon>
+        </div>
+      </div>
+      </div>
+    </div>
   </div>
 </ion-content>

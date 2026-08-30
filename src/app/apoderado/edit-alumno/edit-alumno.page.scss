@@ -1,23 +1,45 @@
-.welcome-text {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin: 0 0 4px;
+.edit-content {
+  --background: transparent;
 }
 
-.editing-text {
-  font-size: 0.9rem;
-  color: var(--ion-color-medium);
-  margin: 0 0 16px;
+.edit-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--sc-scrim);
+}
+
+// El area vacia sobre la hoja cierra el modal, como en cualquier hoja
+// inferior nativa.
+.edit-scrim {
+  flex: 1;
+  min-height: 60px;
+}
+
+.edit-sheet {
+  background: var(--sc-surface);
+  border-radius: var(--sc-radius-sheet) var(--sc-radius-sheet) 0 0;
+  padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  max-height: 90%;
+  overflow-y: auto;
+}
+
+.edit-title {
+  font-family: "Manrope", "Inter", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--sc-text);
+  margin: 0;
+}
+
+.edit-sub {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--sc-muted);
+  margin: 4px 0 18px;
 }
 
 .edit-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.edit-actions ion-button {
-  flex: 1;
-  margin: 0;
+  margin-top: 18px;
 }

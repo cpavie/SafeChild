@@ -1,66 +1,81 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Información Conductor</ion-title>
-    <ion-buttons slot="end">
-      <app-theme-toggle></app-theme-toggle>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content>
-  <div class="app-card">
-    <ion-avatar class="avatar">
-      <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
-      <img
-        src="{{this.dataConductor.con_fotoperfil}}"
-        alt=""
-        onerror="this.style.display='none'"
-      />
-    </ion-avatar>
-
-    <ion-list class="app-list" lines="full">
-      <ion-item>
-        <ion-icon slot="start" name="person-outline"></ion-icon>
-        <ion-label>Nombres</ion-label>
-        <ion-input value="{{this.dataConductorPersona.p_nombres}}" readonly></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-icon slot="start" name="person-outline"></ion-icon>
-        <ion-label>Apellidos</ion-label>
-        <ion-input value="{{this.dataConductorPersona.p_apellidos}}" readonly></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-icon slot="start" name="card-outline"></ion-icon>
-        <ion-label>Rut</ion-label>
-        <ion-input value="{{this.dataConductorPersona.p_numdocumento}}" readonly></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-icon slot="start" name="call-outline"></ion-icon>
-        <ion-label>Teléfono</ion-label>
-        <ion-input value="{{this.dataConductor.con_telefono}}" readonly></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-icon slot="start" name="mail-outline"></ion-icon>
-        <ion-label>Correo</ion-label>
-        <ion-input value="{{this.dataConductor.con_correo}}" readonly></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-icon slot="start" name="map-outline"></ion-icon>
-        <ion-label>Comuna</ion-label>
-        <ion-input value="{{this.dataConductorPersona.p_comuna}}" readonly></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-icon slot="start" name="location-outline"></ion-icon>
-        <ion-label>Dirección</ion-label>
-        <ion-input value="{{this.dataConductorPersona.p_direccion}}" readonly></ion-input>
-      </ion-item>
-    </ion-list>
-
-    <p class="app-section-title">Foto licencia</p>
-    <ion-img class="permit-img" src="{{this.img_licencia}}"></ion-img>
-
-    <ion-button color="medium" fill="outline" (click)="dismiss()" shape="round" expand="block">
-      Volver
+<ion-content class="info-content">
+  <div class="sc-detail-top">
+    <ion-button class="sc-icon-btn" (click)="dismiss()">
+      <ion-icon slot="icon-only" name="chevron-back"></ion-icon>
     </ion-button>
+    <div>
+      <div class="sc-detail-top-title">Quién va a bordo</div>
+      <div class="sc-detail-top-sub">Datos del equipo del furgón</div>
+    </div>
+  </div>
+
+  <div class="sc-detail-sheet">
+    <!-- Las tres pantallas de info son la misma vista con otra pestaña:
+         cambiar de pestaña cierra este modal y abre el siguiente (ver
+         rastreo-apoderado.page.ts). -->
+    <div class="sc-tabs">
+      <div class="sc-tab sc-tab--on">Conductor</div>
+      <div class="sc-tab" (click)="dismiss('auxiliar')">Auxiliar</div>
+      <div class="sc-tab" (click)="dismiss('furgon')">Furgón</div>
+    </div>
+
+    <div class="sc-detail-identity">
+      <div class="sc-avatar sc-avatar--lg sc-avatar--ring">
+        <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
+        <img
+          src="{{ dataConductor.con_fotoperfil }}"
+          alt=""
+          onerror="this.style.display='none'"
+        />
+      </div>
+      <div>
+        <div class="sc-detail-name">
+          {{ dataConductorPersona.p_nombres }} {{ dataConductorPersona.p_apellidos }}
+        </div>
+        <div class="sc-detail-role">Conductor del furgón</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sc-datarow">
+        <ion-icon name="card-outline"></ion-icon>
+        <span class="sc-datarow-label">Rut</span>
+        <span class="sc-datarow-value">{{ dataConductorPersona.p_numdocumento }}</span>
+      </div>
+      <div class="sc-datarow">
+        <ion-icon name="call-outline"></ion-icon>
+        <span class="sc-datarow-label">Teléfono</span>
+        <span class="sc-datarow-value">{{ dataConductor.con_telefono }}</span>
+      </div>
+      <div class="sc-datarow">
+        <ion-icon name="mail-outline"></ion-icon>
+        <span class="sc-datarow-label">Correo</span>
+        <span class="sc-datarow-value">{{ dataConductor.con_correo }}</span>
+      </div>
+      <div class="sc-datarow">
+        <ion-icon name="map-outline"></ion-icon>
+        <span class="sc-datarow-label">Comuna</span>
+        <span class="sc-datarow-value">{{ dataConductorPersona.p_comuna }}</span>
+      </div>
+      <div class="sc-datarow">
+        <ion-icon name="location-outline"></ion-icon>
+        <span class="sc-datarow-label">Dirección</span>
+        <span class="sc-datarow-value">{{ dataConductorPersona.p_direccion }}</span>
+      </div>
+    </div>
+
+    <div class="sc-doc">
+      <p class="sc-section-title">Foto licencia</p>
+      <div class="sc-doc-frame">
+        <img *ngIf="img_licencia" [src]="img_licencia" alt="Licencia del conductor" />
+        <span class="sc-doc-empty" *ngIf="!img_licencia">FOTO DE LICENCIA</span>
+      </div>
+    </div>
+
+    <div class="sc-detail-back">
+      <ion-button class="sc-btn" expand="block" fill="outline" (click)="dismiss()">
+        Volver al mapa
+      </ion-button>
+    </div>
   </div>
 </ion-content>

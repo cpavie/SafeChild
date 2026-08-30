@@ -1,6 +1,37 @@
-ion-content {
-    --padding-bottom: 10px;
-    --padding-end: 8%;
-    --padding-start: 8%;
-    --padding-top: 30px;
+.sc-card {
+  padding: 20px;
+}
+
+.ayuda-icon {
+  font-size: 1.9rem;
+  color: var(--ion-color-primary);
+}
+
+.ayuda-text {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  font-weight: 500;
+  color: var(--sc-text);
+  margin: 12px 0 0;
+}
+
+.ayuda-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 50px;
+  margin-top: 18px;
+  border-radius: 999px;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-family: "Manrope", "Inter", sans-serif;
+  font-size: 0.94rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(var(--ion-color-primary-rgb), 0.26);
+}
+
+.ayuda-cta ion-icon {
+  font-size: 1.2rem;
 }

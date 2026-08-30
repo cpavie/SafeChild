@@ -147,10 +147,17 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
   }
 
   leafletMap() {
-    this.map = Leaflet.map("map1").setView([this.lat, this.lon], 17);
+    // Sin los botones +/- de Leaflet: quedan bajo la tarjeta de vidrio
+    // que flota sobre el mapa, y en telefono el zoom se hace con pinza.
+    this.map = Leaflet.map("map1", { zoomControl: false }).setView(
+      [this.lat, this.lon],
+      17
+    );
     Leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      // Las teselas son de openstreetmap.org: la atribucion a Mapbox
+      // que habia aqui citaba a un proveedor que no se usa.
       attribution:
-        'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.map);
 
     var myIcon = Leaflet.icon({
@@ -162,6 +169,11 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     Leaflet.marker([this.lat, this.lon], { icon: myIcon }).addTo(
       this.layerGroup
     );
+
+    // El mapa ya no vive en una tarjeta de alto fijo: ocupa el hueco que
+    // deja la hoja inferior. Leaflet mide el contenedor al crearse, asi
+    // que si el layout todavia no asento se queda con un alto de 0.
+    setTimeout(() => this.map && this.map.invalidateSize(), 0);
   }
 
   async finalizarRutaAlum(bind) {
@@ -207,6 +219,15 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
       ],
     });
     await alert.present();
+  }
+
+  // El mapa sigue al furgon, pero el conductor puede haberlo arrastrado
+  // para mirar el resto de la ruta: esto lo devuelve a su posicion sin
+  // esperar la proxima lectura del GPS.
+  recentrar() {
+    if (this.map && this.lat != null && this.lon != null) {
+      this.map.flyTo([this.lat, this.lon], 17);
+    }
   }
 
   async reload(url: string): Promise<boolean> {

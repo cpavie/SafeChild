@@ -1,19 +1,34 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Ayuda</ion-title>
-    <ion-buttons slot="end">
+    <div class="sc-header-row">
+      <ion-button class="sc-icon-btn" (click)="onClick()">
+        <ion-icon slot="icon-only" name="chevron-back"></ion-icon>
+      </ion-button>
+      <div class="sc-header-titles">
+        <p class="sc-title">Ayuda</p>
+      </div>
       <app-theme-toggle></app-theme-toggle>
-    </ion-buttons>
+    </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <div class="app-card">
-    <p>
-      Si requiere ayuda de cualquier tipo referente a la aplicación no dude en
-      enviarnos un correo <a href="mailto:pavieclaudio@gmail.com">aquí</a>!
-    </p>
-    <ion-button (click)="onClick()" expand="block" shape="round">
+  <div class="sc-stack">
+    <div class="sc-card">
+      <ion-icon class="ayuda-icon" name="chatbubble-ellipses-outline"></ion-icon>
+      <p class="ayuda-text">
+        Si requiere ayuda de cualquier tipo referente a la aplicación no dude en
+        enviarnos un correo.
+      </p>
+      <!-- El correo es la accion principal de la pantalla, no un enlace
+           dentro del parrafo: se le da la pastilla del CTA. -->
+      <a class="ayuda-cta" href="mailto:pavieclaudio@gmail.com">
+        <ion-icon name="mail-outline"></ion-icon>
+        <span>Escribir a soporte</span>
+      </a>
+    </div>
+
+    <ion-button class="sc-btn" expand="block" fill="clear" (click)="onClick()">
       Volver
     </ion-button>
   </div>

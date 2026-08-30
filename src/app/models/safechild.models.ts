@@ -9,6 +9,7 @@ export interface Persona {
   p_direccion?: string;
   p_comuna?: string;
   p_fecnac?: string;
+  p_numdocumento?: string;
 }
 
 export interface Apoderado {
@@ -41,6 +42,10 @@ export interface Furgon {
   fur_coordenadas: [number, number] | { [key: string]: number };
   alumnos: string[];
   auxiliares: string[];
+  fur_patente?: string;
+  fur_capacidad?: number;
+  fur_foto?: string;
+  fur_fotopermiso?: string;
 }
 
 export interface Auxiliar {

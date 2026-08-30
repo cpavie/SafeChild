@@ -1,41 +1,60 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Inicio</ion-title>
-    <ion-buttons slot="end">
+    <div class="sc-header-row">
+      <div class="sc-header-titles">
+        <p class="sc-eyebrow">{{ saludo }}</p>
+        <p class="sc-title">{{ dataService.getDataApoderadoPersona().p_nombres }}</p>
+      </div>
       <app-theme-toggle></app-theme-toggle>
-      <ion-button (click)="ayuda()">
+      <ion-button class="sc-icon-btn" (click)="ayuda()">
         <ion-icon slot="icon-only" name="help-circle-outline"></ion-icon>
       </ion-button>
-      <ion-button (click)="logout()">
+      <ion-button class="sc-icon-btn" (click)="logout()">
         <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
       </ion-button>
-    </ion-buttons>
+    </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <div class="app-card">
-    <p class="welcome-text">
-      Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
+  <div class="sc-stack">
+    <p class="sc-section-title">Mis alumnos</p>
+
+    <!-- Una tarjeta por alumno en vez de un ion-select: el estado "en
+         ruta" es la informacion que el apoderado viene a buscar, y en
+         un desplegable quedaba escondido hasta elegir. -->
+    <div class="sc-card alumno-card" *ngFor="let alumno of alumnos">
+      <div class="alumno-head">
+        <div class="sc-avatar sc-avatar--md">
+          <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
+        </div>
+        <div class="alumno-id">
+          <div class="alumno-nombre">{{ alumno.nombre }}</div>
+          <div class="alumno-furgon">Furgón {{ alumno.patente }}</div>
+        </div>
+        <span class="sc-badge" *ngIf="alumno.enRuta">En ruta</span>
+        <span class="sc-badge sc-badge--muted" *ngIf="!alumno.enRuta">Sin ruta</span>
+      </div>
+
+      <div class="alumno-actions">
+        <ion-button
+          *ngIf="alumno.enRuta"
+          class="sc-btn sc-btn--short"
+          expand="block"
+          (click)="getInfoAlumno(alumno.id)"
+        >
+          <ion-icon slot="start" name="location-outline"></ion-icon>
+          Rastrear
+        </ion-button>
+        <div class="alumno-sinruta" *ngIf="!alumno.enRuta">No está en ruta</div>
+        <ion-button class="sc-btn sc-btn--short edit-btn" fill="outline" (click)="editAlumno(alumno.id)">
+          <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+
+    <p class="alumnos-vacio" *ngIf="alumnos.length === 0">
+      No hay alumnos asociados a su cuenta.
     </p>
-
-    <p class="app-section-title">Alumno</p>
-    <ion-item lines="none" class="select-item bordered-item">
-      <ion-icon slot="start" name="person-outline"></ion-icon>
-      <ion-select placeholder="Seleccione uno" interface="action-sheet" [(ngModel)]="bind">
-        <ng-container *ngFor="let item of alumnos_id, let i = index">
-          <ion-select-option [value]="item">{{alumnos_nombres[i]}}</ion-select-option>
-        </ng-container>
-      </ion-select>
-    </ion-item>
-
-    <ion-button expand="block" shape="round" (click)="getInfoAlumno(bind)">
-      <ion-icon slot="start" name="location-outline"></ion-icon>
-      Rastrear
-    </ion-button>
-    <ion-button expand="block" shape="round" fill="outline" (click)="editAlumno(bind)">
-      <ion-icon slot="start" name="create-outline"></ion-icon>
-      Editar información alumno
-    </ion-button>
   </div>
 </ion-content>

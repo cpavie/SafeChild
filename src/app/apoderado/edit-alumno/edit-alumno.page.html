@@ -1,39 +1,42 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Editar Alumno</ion-title>
-    <ion-buttons slot="end">
-      <app-theme-toggle></app-theme-toggle>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<!-- Hoja inferior sobre un velo: editar un alumno es una tarea corta
+     dentro del inicio, no una pantalla propia, asi que el diseño deja
+     ver el contexto detras en vez de taparlo con un header completo. -->
+<ion-content class="edit-content" scroll-y="false">
+  <div class="edit-layout">
+    <div class="edit-scrim" (click)="dismiss()"></div>
 
-<ion-content>
-  <div class="app-card">
-    <p class="welcome-text">
-      Bienvenido {{this.dataService.getDataApoderadoPersona().p_nombres}}
-    </p>
-    <p class="editing-text">
-      Editando información de {{this.dataAlumnoPersona.p_nombres}}
-    </p>
+    <div class="edit-sheet">
+      <div class="sc-sheet-handle"></div>
+      <h2 class="edit-title">Editar alumno</h2>
+      <p class="edit-sub">
+        {{ dataAlumnoPersona.p_nombres }} {{ dataAlumnoPersona.p_apellidos }}
+      </p>
 
-    <ion-list class="app-list" lines="full">
-      <ion-item>
-        <ion-label position="stacked">Comuna</ion-label>
-        <ion-input [(ngModel)]="comuna"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label position="stacked">Dirección</ion-label>
-        <ion-input [(ngModel)]="direccion"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label position="stacked">Comentario</ion-label>
-        <ion-textarea [(ngModel)]="comentario"></ion-textarea>
-      </ion-item>
-    </ion-list>
+      <div class="sc-fields">
+        <div class="sc-field sc-field--flat">
+          <div class="sc-field-body">
+            <div class="sc-field-label">Comuna</div>
+            <ion-input [(ngModel)]="comuna"></ion-input>
+          </div>
+        </div>
+        <div class="sc-field sc-field--flat">
+          <div class="sc-field-body">
+            <div class="sc-field-label">Dirección</div>
+            <ion-input [(ngModel)]="direccion"></ion-input>
+          </div>
+        </div>
+        <div class="sc-field sc-field--flat">
+          <div class="sc-field-body">
+            <div class="sc-field-label">Comentario para el conductor</div>
+            <ion-textarea rows="3" [(ngModel)]="comentario"></ion-textarea>
+          </div>
+        </div>
+      </div>
 
-    <div class="edit-actions">
-      <ion-button shape="round" (click)="save()">Confirmar</ion-button>
-      <ion-button shape="round" color="medium" fill="outline" (click)="dismiss()">Cancelar</ion-button>
+      <div class="sc-actions edit-actions">
+        <ion-button class="sc-btn" (click)="save()">Confirmar</ion-button>
+        <ion-button class="sc-btn" fill="outline" (click)="dismiss()">Cancelar</ion-button>
+      </div>
     </div>
   </div>
 </ion-content>
