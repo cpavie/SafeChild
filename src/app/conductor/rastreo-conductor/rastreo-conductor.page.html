@@ -50,10 +50,22 @@
         </div>
       </div>
 
-      <ion-button class="sc-btn" expand="block" color="danger" (click)="finalizarRuta()">
+      <!-- No se puede cerrar la ruta con alumnos arriba: hacerlo les
+           avisaba a sus apoderados que ya habian llegado. La ruta
+           termina sola al bajar al ultimo. -->
+      <ion-button
+        class="sc-btn"
+        expand="block"
+        color="danger"
+        [disabled]="!puedeFinalizar"
+        (click)="finalizarRuta()"
+      >
         <ion-icon slot="start" name="stop-circle-outline"></ion-icon>
         Finalizar ruta
       </ion-button>
+      <p class="finalizar-hint" *ngIf="!puedeFinalizar">
+        Baje a todos los alumnos para finalizar la ruta
+      </p>
       </div>
     </div>
   </div>
