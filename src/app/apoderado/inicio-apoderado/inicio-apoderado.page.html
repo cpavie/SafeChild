@@ -36,24 +36,30 @@
         <span class="sc-badge sc-badge--muted" *ngIf="!alumno.enRuta">Sin ruta</span>
       </div>
 
+      <!-- "Rastrear" se muestra siempre, tambien cuando el badge dice
+           "Sin ruta": el badge es una foto del estado al abrir la
+           pantalla, y esta pestaña no se recrea al volver a ella. Si el
+           boton dependiera de esa foto, un apoderado que abrio la app
+           antes de que el conductor iniciara la ruta se quedaria sin
+           forma de llegar al rastreo. getInfoAlumno() relee alu_estado
+           en Firestore al pulsarlo y avisa si todavia no salio. -->
       <div class="alumno-actions">
         <ion-button
-          *ngIf="alumno.enRuta"
           class="sc-btn sc-btn--short"
           expand="block"
+          [fill]="alumno.enRuta ? 'solid' : 'outline'"
           (click)="getInfoAlumno(alumno.id)"
         >
           <ion-icon slot="start" name="location-outline"></ion-icon>
           Rastrear
         </ion-button>
-        <div class="alumno-sinruta" *ngIf="!alumno.enRuta">No está en ruta</div>
         <ion-button class="sc-btn sc-btn--short edit-btn" fill="outline" (click)="editAlumno(alumno.id)">
           <ion-icon slot="icon-only" name="create-outline"></ion-icon>
         </ion-button>
       </div>
     </div>
 
-    <p class="alumnos-vacio" *ngIf="alumnos.length === 0">
+    <p class="alumnos-vacio" *ngIf="!cargando && alumnos.length === 0">
       No hay alumnos asociados a su cuenta.
     </p>
   </div>
