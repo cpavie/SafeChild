@@ -52,15 +52,35 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     public AFA: AngularFireAuth,
     public alertController: AlertController,
     private modalController: ModalController
-  ) {
-    window.addEventListener("popstate", this.popstateHandler, false);
+  ) {}
+
+  /*
+   * El seguimiento arranca en ionViewWillEnter, no en ngOnInit, porque
+   * esta pagina es una tab: Ionic mantiene vivo su componente al salir,
+   * asi que ngOnInit corre una sola vez en toda la sesion. Al terminar
+   * una ruta y comenzar otra, ngOnInit no volveria a ejecutarse y la
+   * pantalla quedaria con el mapa y la lista de la ruta anterior.
+   *
+   * El flag evita re-inicializar al volver de otra tab en mitad de una
+   * ruta, que tambien dispara ionViewWillEnter.
+   */
+  private seguimientoActivo = false;
+
+  ionViewWillEnter() {
+    if (!this.seguimientoActivo) {
+      this.iniciarSeguimiento();
+    }
   }
 
-  ngOnInit() {
+  ngOnInit() {}
+
+  private iniciarSeguimiento() {
+    this.seguimientoActivo = true;
+    window.addEventListener("popstate", this.popstateHandler, false);
     // El id del documento conductor/{uid} ES el uid de Firebase Auth
     // (ver firestore.rules), no un campo id_conductor dentro del doc
     // (ese campo no existe). Se guarda aparte para los updates propios
-    // de con_estado en toast()/logout().
+    // de con_estado en liberarRuta().
     this.AFA.currentUser.then((user) => {
       if (user) {
         this.uid = user.uid;
@@ -235,6 +255,8 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     return this.router.navigateByUrl(url);
   }
 
+  // Se llega aca cuando ya se bajo al ultimo alumno: la ruta termina
+  // sola, sin que el conductor tenga que pulsar "Finalizar ruta".
   async toast() {
     const toast = await this.toastController.create({
       header: "Ha finalizado la ruta con exito, felicitaciones!",
@@ -242,32 +264,16 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
       position: "middle",
     });
     toast.present();
-
-    // batch en vez de dos update() independientes: si la app se
-    // cierra a mitad de camino, o ambos cambios quedan aplicados o
-    // ninguno, nunca un estado a medias (conductor libre pero
-    // auxiliar todavia "en ruta").
-    const batch = this.db.firestore.batch();
-    batch.update(
-      this.db
-        .collection("auxiliar")
-        .doc(this.dataService.getIdAuxiliar()).ref,
-      { aux_estado: 0 }
-    );
-    batch.update(
-      this.db.collection("conductor").doc(this.uid).ref,
-      { con_estado: 0 }
-    );
-    await batch.commit().catch(() => this.avisarErrorTracking());
-
-    this.sub.unsubscribe();
-    this.AFA.signOut();
-    toast.onWillDismiss().then((a) => window.location.replace("/home"));
+    // Los alumnos ya quedaron en alu_estado 0 al bajarlos uno por uno.
+    await this.liberarRuta([]);
+    toast.onWillDismiss().then(() => this.volverAlInicio());
   }
 
-  async logout() {
+  async finalizarRuta() {
     const alert = await this.alertController.create({
-      header: "Al presionar confirmar se finalizara la ruta.",
+      header: "¿Desea finalizar la ruta?",
+      message:
+        "Se liberara el furgon y volvera al inicio para comenzar una ruta nueva. No se cerrara su sesion.",
       buttons: [
         {
           text: "Cancelar",
@@ -277,29 +283,8 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
         {
           text: "Confirmar",
           handler: async (b) => {
-            // batch: conductor/auxiliar/alumnos deben quedar todos
-            // liberados juntos, no en updates independientes que
-            // pueden quedar a medias si la app se cierra.
-            const batch = this.db.firestore.batch();
-            batch.update(
-              this.db
-                .collection("auxiliar")
-                .doc(this.dataService.getIdAuxiliar()).ref,
-              { aux_estado: 0 }
-            );
-            batch.update(
-              this.db.collection("conductor").doc(this.uid).ref,
-              { con_estado: 0 }
-            );
-            for (let i = 0; i < this.ids_alumnos.length; i++) {
-              batch.update(
-                this.db.collection("alumno").doc(this.ids_alumnos[i]).ref,
-                { alu_estado: 0 }
-              );
-            }
-            await batch.commit().catch(() => this.avisarErrorTracking());
-            this.AFA.signOut();
-            this.router.navigate(["/home"]);
+            await this.liberarRuta(this.ids_alumnos);
+            this.volverAlInicio();
           },
         },
       ],
@@ -307,14 +292,70 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  ngOnDestroy() {
+  /*
+   * Deja conductor, auxiliar y alumnos libres. batch en vez de updates
+   * independientes: si la app se cierra a mitad de camino, o quedan
+   * todos aplicados o ninguno, nunca un estado a medias (conductor
+   * libre pero auxiliar todavia "en ruta").
+   */
+  private async liberarRuta(idsAlumnos: string[]) {
+    const batch = this.db.firestore.batch();
+    batch.update(
+      this.db.collection("auxiliar").doc(this.dataService.getIdAuxiliar()).ref,
+      { aux_estado: 0 }
+    );
+    batch.update(this.db.collection("conductor").doc(this.uid).ref, {
+      con_estado: 0,
+    });
+    for (const id of idsAlumnos) {
+      batch.update(this.db.collection("alumno").doc(id).ref, {
+        alu_estado: 0,
+      });
+    }
+    await batch.commit().catch(() => this.avisarErrorTracking());
+  }
+
+  /*
+   * Terminar la ruta ya no cierra la sesion: el conductor vuelve al
+   * inicio listo para comenzar otra.
+   *
+   * Se navega con el router, sin recargar la pagina: la sesion de
+   * Firebase de esta app NO sobrevive a un reload (authState emite null
+   * y IsLoggedGuard rebota a /home), asi que recargar equivaldria a
+   * desloguearlo.
+   *
+   * Como no hay recarga, el estado en memoria hay que soltarlo a mano:
+   * el watchPosition y el mapa seguirian vivos, e InicioConductorGuard
+   * bloquea el inicio mientras dataService todavia tenga alumnos.
+   */
+  private volverAlInicio() {
+    this.detenerSeguimiento();
+    this.dataService.ids_alumnos = [];
+    this.dataService.nombres_alumnos = [];
+    this.ids_alumnos = [];
+    this.nombres_alumnos = [];
+    this.router.navigate(["/tabs-conductor/inicio-conductor"]);
+  }
+
+  private detenerSeguimiento() {
+    this.seguimientoActivo = false;
     if (this.sub) {
       this.sub.unsubscribe();
+      this.sub = undefined;
     }
     window.removeEventListener("popstate", this.popstateHandler, false);
     if (this.map) {
+      // remove() ademas libera el contenedor #map1, que sigue en el DOM
+      // porque el componente no se destruye: sin esto, volver a entrar
+      // fallaria con "Map container is already initialized".
       this.map.remove();
+      this.map = undefined;
     }
+    this.layerGroup = undefined;
+  }
+
+  ngOnDestroy() {
+    this.detenerSeguimiento();
   }
 
   async ayuda() {

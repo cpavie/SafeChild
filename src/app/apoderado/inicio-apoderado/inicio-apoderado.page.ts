@@ -25,6 +25,9 @@ export class InicioApoderadoPage implements OnInit {
     patente: string;
     enRuta: boolean;
   }> = [];
+  // Evita que "No hay alumnos asociados a su cuenta" aparezca mientras
+  // la primera lectura sigue en curso.
+  cargando = true;
 
   constructor(
     public AFA: AngularFireAuth,
@@ -101,6 +104,7 @@ export class InicioApoderadoPage implements OnInit {
   }
 
   getInfo() {
+    this.cargando = true;
     this.db
       .collection("apoderado")
       .doc(this.uid)
@@ -114,45 +118,90 @@ export class InicioApoderadoPage implements OnInit {
           .get()
           .forEach((doc) => {
             this.dataService.setDataApoderadoPersona(doc.data() as Persona);
-          });
+          })
+          .catch(() => this.avisarErrorCarga());
 
         // Se crean las filas de una vez y luego cada consulta rellena la
         // suya por indice: asi el orden de las tarjetas sigue el de
         // id_alumnos y no el de llegada de las respuestas.
-        this.alumnos = ids.map((id) => ({
+        //
+        // authState puede emitir mas de una vez (refresco de token), y
+        // entonces `alumnos` se reemplaza mientras las consultas de la
+        // pasada anterior siguen en vuelo. Cada callback se queda con
+        // una referencia a SU array y comprueba que la fila siga siendo
+        // la del mismo alumno antes de escribirla; si no, ya es de otra
+        // pasada y se descarta.
+        const filas = ids.map((id) => ({
           id,
           nombre: "",
           patente: "",
           enRuta: false,
         }));
+        this.alumnos = filas;
+        this.cargando = false;
 
         ids.forEach((id, i) => {
+          const fila = filas[i];
           this.db
             .collection("alumno")
             .doc(id)
             .get()
             .forEach((alumnoDoc) => {
-              this.alumnos[i].enRuta = alumnoDoc.get("alu_estado") == 1;
-              this.db
-                .collection("persona")
-                .doc(alumnoDoc.get("id_persona"))
-                .get()
-                .forEach((personaDoc) => {
-                  this.alumnos[i].nombre =
-                    personaDoc.get("p_nombres") +
-                    " " +
-                    personaDoc.get("p_apellidos");
-                });
-              this.db
-                .collection("furgon")
-                .doc(alumnoDoc.get("id_furgon"))
-                .get()
-                .forEach((furgonDoc) => {
-                  this.alumnos[i].patente = furgonDoc.get("fur_patente");
-                });
-            });
+              fila.enRuta = alumnoDoc.get("alu_estado") == 1;
+
+              // doc(undefined) no falla al construirse: Firestore lo
+              // toma como "genera un id nuevo", y recien el get() se
+              // rechaza por reglas. Se corta antes para no disparar una
+              // lectura condenada por cada campo que falte.
+              const idPersona = alumnoDoc.get("id_persona");
+              if (idPersona) {
+                this.db
+                  .collection("persona")
+                  .doc(idPersona)
+                  .get()
+                  .forEach((personaDoc) => {
+                    fila.nombre =
+                      personaDoc.get("p_nombres") +
+                      " " +
+                      personaDoc.get("p_apellidos");
+                  })
+                  .catch(() => this.avisarErrorCarga());
+              }
+
+              const idFurgon = alumnoDoc.get("id_furgon");
+              if (idFurgon) {
+                this.db
+                  .collection("furgon")
+                  .doc(idFurgon)
+                  .get()
+                  .forEach((furgonDoc) => {
+                    fila.patente = furgonDoc.get("fur_patente");
+                  })
+                  .catch(() => this.avisarErrorCarga());
+              }
+            })
+            .catch(() => this.avisarErrorCarga());
         });
+      })
+      .catch(() => {
+        this.cargando = false;
+        this.avisarErrorCarga();
       });
+  }
+
+  private avisandoErrorCarga = false;
+
+  // Las cadenas de lecturas anidadas no tenian manejo de error: si algo
+  // fallaba (permiso denegado, doc borrado), las tarjetas quedaban a
+  // medio llenar sin avisar. El flag evita apilar un toast por cada
+  // lectura que falle.
+  private avisarErrorCarga() {
+    if (this.avisandoErrorCarga) {
+      return;
+    }
+    this.avisandoErrorCarga = true;
+    this.toast("No se pudo cargar parte de la información. Intente de nuevo.");
+    setTimeout(() => (this.avisandoErrorCarga = false), 3000);
   }
 
   // El saludo del header cambia con la hora: es el unico dato de la

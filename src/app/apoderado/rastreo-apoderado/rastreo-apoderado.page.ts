@@ -268,7 +268,9 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
    * que corresponde; para el usuario es un cambio de pestaña.
    */
   private async abrirInfo(tab: "conductor" | "auxiliar" | "furgon") {
-    const componentes = {
+    const componentes: {
+      [k: string]: { component: any; componentProps: any };
+    } = {
       conductor: {
         component: InfoConductorPage,
         componentProps: {
@@ -291,12 +293,19 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
       },
     };
 
-    const modal = await this.modalCtrl.create(componentes[tab]);
-    await modal.present();
+    // Bucle, no recursion: encadenar `await this.abrirInfo(...)` dejaba
+    // vivo un frame por cada cambio de pestaña.
+    let actual = tab;
+    while (actual) {
+      const modal = await this.modalCtrl.create(componentes[actual]);
+      await modal.present();
 
-    const { data } = await modal.onWillDismiss();
-    if (data && data.ir) {
-      await this.abrirInfo(data.ir);
+      // onDidDismiss, no onWillDismiss: este ultimo resuelve cuando
+      // ARRANCA la animacion de salida, asi que el modal siguiente se
+      // presentaba mientras el anterior seguia en la pila y todavia era
+      // dueño del backdrop, que se lo llevaba al terminar de cerrarse.
+      const { data } = await modal.onDidDismiss();
+      actual = data && data.ir ? data.ir : null;
     }
   }
   async logout() {

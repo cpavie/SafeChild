@@ -23,7 +23,11 @@ export class InicioConductorPage implements OnInit {
     direccion: string;
     on: boolean;
   }> = [];
-  auxiliares: Array<{ id: string; nombre: string }> = [];
+  // nombres y apellidos se guardan por separado, no concatenados: el
+  // rastreo necesita la Persona con sus dos campos, y volver a partir
+  // un "nombre completo" por el primer espacio rompe cualquier nombre
+  // compuesto ("Ana María Soto Rojas" daria p_nombres "Ana").
+  auxiliares: Array<{ id: string; nombres: string; apellidos: string }> = [];
   bind: string;
 
   constructor(
@@ -52,6 +56,17 @@ export class InicioConductorPage implements OnInit {
         this.getInfo();
       }
     });
+  }
+
+  // Al volver desde "Finalizar ruta" esta pagina sigue viva (es una
+  // tab, Ionic no la destruye), asi que ngOnInit no vuelve a correr:
+  // sin esto quedaria el roster con la seleccion de la ruta anterior y
+  // los alumnos que ya fueron entregados.
+  ionViewWillEnter() {
+    if (this.uid) {
+      this.bind = undefined;
+      this.getInfo();
+    }
   }
 
   get seleccionados() {
@@ -101,22 +116,35 @@ export class InicioConductorPage implements OnInit {
                 const idsAuxiliares: string[] = Object.values(
                   doc.get("auxiliares") || {}
                 );
-                this.auxiliares = idsAuxiliares.map((id) => ({ id, nombre: "" }));
+                // Cada callback se queda con SU fila (no con el indice
+                // dentro del array actual): authState puede emitir de
+                // nuevo y reemplazar el array mientras estas consultas
+                // siguen en vuelo, y escribir por indice reventaria con
+                // "cannot set property of undefined".
+                const filasAux = idsAuxiliares.map((id) => ({
+                  id,
+                  nombres: "",
+                  apellidos: "",
+                }));
+                this.auxiliares = filasAux;
                 idsAuxiliares.forEach((id, i) => {
+                  const fila = filasAux[i];
                   this.db
                     .collection("auxiliar")
                     .doc(id)
                     .get()
                     .forEach((auxDoc) => {
+                      const idPersona = auxDoc.get("id_persona");
+                      if (!idPersona) {
+                        return;
+                      }
                       this.db
                         .collection("persona")
-                        .doc(auxDoc.get("id_persona"))
+                        .doc(idPersona)
                         .get()
                         .forEach((personaDoc) => {
-                          this.auxiliares[i].nombre =
-                            personaDoc.get("p_nombres") +
-                            " " +
-                            personaDoc.get("p_apellidos");
+                          fila.nombres = personaDoc.get("p_nombres");
+                          fila.apellidos = personaDoc.get("p_apellidos");
                         })
                         .catch(() => this.avisarErrorCarga());
                     })
@@ -126,28 +154,34 @@ export class InicioConductorPage implements OnInit {
                 const idsAlumnos: string[] = Object.values(
                   doc.get("alumnos") || {}
                 );
-                this.roster = idsAlumnos.map((id) => ({
+                const filasRoster = idsAlumnos.map((id) => ({
                   id,
                   nombre: "",
                   direccion: "",
                   on: false,
                 }));
+                this.roster = filasRoster;
                 idsAlumnos.forEach((id, i) => {
+                  const fila = filasRoster[i];
                   this.db
                     .collection("alumno")
                     .doc(id)
                     .get()
                     .forEach((alumnoDoc) => {
+                      const idPersona = alumnoDoc.get("id_persona");
+                      if (!idPersona) {
+                        return;
+                      }
                       this.db
                         .collection("persona")
-                        .doc(alumnoDoc.get("id_persona"))
+                        .doc(idPersona)
                         .get()
                         .forEach((personaDoc) => {
-                          this.roster[i].nombre =
+                          fila.nombre =
                             personaDoc.get("p_nombres") +
                             " " +
                             personaDoc.get("p_apellidos");
-                          this.roster[i].direccion = personaDoc.get("p_direccion");
+                          fila.direccion = personaDoc.get("p_direccion");
                         })
                         .catch(() => this.avisarErrorCarga());
                     })
@@ -171,25 +205,27 @@ export class InicioConductorPage implements OnInit {
       return;
     }
 
+    // La persona del auxiliar no se guardaba, asi que la cabecera del
+    // rastreo no podia nombrar a quien va a bordo. Se toma del chip ya
+    // elegido y se guarda ANTES de navegar: dentro del callback de la
+    // consulta llegaria tarde, porque router.navigate() de mas abajo se
+    // ejecuta apenas se dispara la lectura, no cuando responde.
+    const chip = this.auxiliares.find((a) => a.id === this.bind);
+    if (chip) {
+      this.dataService.setDataAuxiliarPersona({
+        p_nombres: chip.nombres,
+        p_apellidos: chip.apellidos,
+      });
+    }
+
     this.db
       .collection("auxiliar")
       .doc(this.bind)
       .get()
       .forEach((doc) => {
         this.dataService.setDataAuxiliar(doc.data() as Auxiliar);
-        // La persona del auxiliar no se guardaba, asi que la cabecera
-        // del rastreo no podia nombrar a quien va a bordo. El nombre ya
-        // esta resuelto en el chip elegido: se reusa en vez de pedir
-        // otra vez la persona a Firestore.
-        const chip = this.auxiliares.find((a) => a.id === this.bind);
-        if (chip) {
-          const [nombres, ...apellidos] = chip.nombre.split(" ");
-          this.dataService.setDataAuxiliarPersona({
-            p_nombres: nombres,
-            p_apellidos: apellidos.join(" "),
-          });
-        }
-      });
+      })
+      .catch(() => this.avisarErrorCarga());
     this.db.collection("auxiliar").doc(this.bind).update({
       aux_estado: 1,
     });
