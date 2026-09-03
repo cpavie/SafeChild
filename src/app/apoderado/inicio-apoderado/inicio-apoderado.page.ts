@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, NgZone, OnInit } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { Router } from "@angular/router";
 import { AngularFirestore } from "@angular/fire/firestore";
@@ -36,7 +36,10 @@ export class InicioApoderadoPage implements OnInit {
     public dataService: DatosService,
     public modalCtrl: ModalController,
     public alertController: AlertController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    // Ver el comentario en getInfo() de inicio-conductor: las lecturas
+    // que llegan con la pagina ya viva no disparan deteccion de cambios.
+    private zone: NgZone
   ) {}
 
   private async toast(message: string) {
@@ -147,7 +150,9 @@ export class InicioApoderadoPage implements OnInit {
             .doc(id)
             .get()
             .forEach((alumnoDoc) => {
-              fila.enRuta = alumnoDoc.get("alu_estado") == 1;
+              this.zone.run(() => {
+                fila.enRuta = alumnoDoc.get("alu_estado") == 1;
+              });
 
               // doc(undefined) no falla al construirse: Firestore lo
               // toma como "genera un id nuevo", y recien el get() se
@@ -160,10 +165,12 @@ export class InicioApoderadoPage implements OnInit {
                   .doc(idPersona)
                   .get()
                   .forEach((personaDoc) => {
-                    fila.nombre =
-                      personaDoc.get("p_nombres") +
-                      " " +
-                      personaDoc.get("p_apellidos");
+                    this.zone.run(() => {
+                      fila.nombre =
+                        personaDoc.get("p_nombres") +
+                        " " +
+                        personaDoc.get("p_apellidos");
+                    });
                   })
                   .catch(() => this.avisarErrorCarga());
               }
@@ -175,7 +182,9 @@ export class InicioApoderadoPage implements OnInit {
                   .doc(idFurgon)
                   .get()
                   .forEach((furgonDoc) => {
-                    fila.patente = furgonDoc.get("fur_patente");
+                    this.zone.run(() => {
+                      fila.patente = furgonDoc.get("fur_patente");
+                    });
                   })
                   .catch(() => this.avisarErrorCarga());
               }

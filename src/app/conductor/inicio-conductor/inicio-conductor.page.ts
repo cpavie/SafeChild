@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, NgZone, OnInit } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { AngularFirestore } from "@angular/fire/firestore";
 import { Router } from "@angular/router";
@@ -37,7 +37,10 @@ export class InicioConductorPage implements OnInit {
     public router: Router,
     public alertController: AlertController,
     private modalController: ModalController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    // Ver el comentario en getInfo(): las lecturas de Firestore que
+    // llegan al volver a esta tab no disparan deteccion de cambios.
+    private zone: NgZone
   ) {}
 
   private async toast(message: string, color: string = "medium") {
@@ -93,6 +96,14 @@ export class InicioConductorPage implements OnInit {
     this.avisandoErrorCarga = false;
   }
 
+  /*
+   * Las escrituras que rellenan roster/auxiliares van dentro de
+   * zone.run(): al volver a esta tab (ionViewWillEnter) el componente ya
+   * existe, y las respuestas de estas lecturas anidadas llegan fuera de
+   * un ciclo de Angular, asi que las filas quedaban con los datos
+   * correctos en memoria pero en blanco en pantalla. En la primera
+   * carga no se notaba porque el arranque dispara deteccion igual.
+   */
   getInfo() {
     this.db
       .collection("conductor")
@@ -143,8 +154,10 @@ export class InicioConductorPage implements OnInit {
                         .doc(idPersona)
                         .get()
                         .forEach((personaDoc) => {
-                          fila.nombres = personaDoc.get("p_nombres");
-                          fila.apellidos = personaDoc.get("p_apellidos");
+                          this.zone.run(() => {
+                            fila.nombres = personaDoc.get("p_nombres");
+                            fila.apellidos = personaDoc.get("p_apellidos");
+                          });
                         })
                         .catch(() => this.avisarErrorCarga());
                     })
@@ -177,11 +190,13 @@ export class InicioConductorPage implements OnInit {
                         .doc(idPersona)
                         .get()
                         .forEach((personaDoc) => {
-                          fila.nombre =
-                            personaDoc.get("p_nombres") +
-                            " " +
-                            personaDoc.get("p_apellidos");
-                          fila.direccion = personaDoc.get("p_direccion");
+                          this.zone.run(() => {
+                            fila.nombre =
+                              personaDoc.get("p_nombres") +
+                              " " +
+                              personaDoc.get("p_apellidos");
+                            fila.direccion = personaDoc.get("p_direccion");
+                          });
                         })
                         .catch(() => this.avisarErrorCarga());
                     })

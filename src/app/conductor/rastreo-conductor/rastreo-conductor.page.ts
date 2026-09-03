@@ -265,11 +265,28 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     });
     toast.present();
     // Los alumnos ya quedaron en alu_estado 0 al bajarlos uno por uno.
-    await this.liberarRuta([]);
+    await this.liberarRuta();
     toast.onWillDismiss().then(() => this.volverAlInicio());
   }
 
+  // La ruta no se puede cerrar con alumnos arriba (ver el comentario de
+  // liberarRuta). El boton ya viene deshabilitado en ese caso; esto es
+  // la segunda barrera, por si se lo alcanza por otro camino.
+  get puedeFinalizar(): boolean {
+    return this.ids_alumnos.length === 0;
+  }
+
   async finalizarRuta() {
+    if (!this.puedeFinalizar) {
+      const toast = await this.toastController.create({
+        message:
+          "Baje a todos los alumnos antes de finalizar la ruta.",
+        duration: 3000,
+        color: "warning",
+      });
+      toast.present();
+      return;
+    }
     const alert = await this.alertController.create({
       header: "¿Desea finalizar la ruta?",
       message:
@@ -283,7 +300,7 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
         {
           text: "Confirmar",
           handler: async (b) => {
-            await this.liberarRuta(this.ids_alumnos);
+            await this.liberarRuta();
             this.volverAlInicio();
           },
         },
@@ -293,12 +310,21 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
   }
 
   /*
-   * Deja conductor, auxiliar y alumnos libres. batch en vez de updates
-   * independientes: si la app se cierra a mitad de camino, o quedan
-   * todos aplicados o ninguno, nunca un estado a medias (conductor
-   * libre pero auxiliar todavia "en ruta").
+   * Libera al conductor y al auxiliar. NO toca alu_estado: el estado de
+   * un alumno solo cambia al bajarlo con "Bajar", uno por uno.
+   *
+   * Antes finalizar la ruta ponia alu_estado 0 a todos los que
+   * siguieran a bordo, y en la app del apoderado ese cambio dispara
+   * "Su alumno llego a su destino" y lo saca del rastreo. Es decir:
+   * cerrar la ruta con niños dentro del furgon le avisaba a cada
+   * apoderado que su hijo ya habia llegado, y le cortaba el
+   * seguimiento mientras el niño seguia viajando.
+   *
+   * batch en vez de updates independientes: si la app se cierra a mitad
+   * de camino, o quedan ambos aplicados o ninguno, nunca un estado a
+   * medias (conductor libre pero auxiliar todavia "en ruta").
    */
-  private async liberarRuta(idsAlumnos: string[]) {
+  private async liberarRuta() {
     const batch = this.db.firestore.batch();
     batch.update(
       this.db.collection("auxiliar").doc(this.dataService.getIdAuxiliar()).ref,
@@ -307,11 +333,6 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     batch.update(this.db.collection("conductor").doc(this.uid).ref, {
       con_estado: 0,
     });
-    for (const id of idsAlumnos) {
-      batch.update(this.db.collection("alumno").doc(id).ref, {
-        alu_estado: 0,
-      });
-    }
     await batch.commit().catch(() => this.avisarErrorTracking());
   }
 
@@ -319,10 +340,9 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
    * Terminar la ruta ya no cierra la sesion: el conductor vuelve al
    * inicio listo para comenzar otra.
    *
-   * Se navega con el router, sin recargar la pagina: la sesion de
-   * Firebase de esta app NO sobrevive a un reload (authState emite null
-   * y IsLoggedGuard rebota a /home), asi que recargar equivaldria a
-   * desloguearlo.
+   * Se navega con el router en vez de recargar la pagina: una recarga
+   * reconstruye toda la app y vuelve a bajar los datos del conductor
+   * para nada, cuando basta con cambiar de pantalla.
    *
    * Como no hay recarga, el estado en memoria hay que soltarlo a mano:
    * el watchPosition y el mapa seguirian vivos, e InicioConductorGuard
