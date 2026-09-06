@@ -25,6 +25,12 @@
   flex-wrap: wrap;
 }
 
+.auxiliar-vacio {
+  font-size: 0.82rem;
+  color: var(--sc-muted);
+  margin: 2px 2px 0;
+}
+
 .comenzar-footer {
   background: var(--sc-surface);
   border-top: 1px solid var(--sc-line-soft);

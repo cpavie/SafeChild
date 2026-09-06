@@ -20,6 +20,19 @@
   <div class="sc-stack">
     <p class="sc-section-title">Mis alumnos</p>
 
+    <!-- Tarjetas fantasma mientras se resuelve apoderado -> alumno ->
+         persona/furgon, para no mostrar tarjetas en blanco ni el
+         mensaje de "sin alumnos" antes de tiempo. -->
+    <div class="sc-card alumno-card sc-card--loading" *ngIf="cargando">
+      <div class="alumno-head">
+        <div class="sc-avatar sc-avatar--md sc-skeleton"></div>
+        <div class="alumno-id">
+          <div class="sc-skeleton sc-skeleton--title"></div>
+          <div class="sc-skeleton sc-skeleton--sub"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Una tarjeta por alumno en vez de un ion-select: el estado "en
          ruta" es la informacion que el apoderado viene a buscar, y en
          un desplegable quedaba escondido hasta elegir. -->
@@ -28,9 +41,17 @@
         <div class="sc-avatar sc-avatar--md">
           <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
         </div>
+        <!-- El nombre y la patente llegan en consultas posteriores a la
+             que crea la tarjeta, asi que puede existir sin ellos. -->
         <div class="alumno-id">
-          <div class="alumno-nombre">{{ alumno.nombre }}</div>
-          <div class="alumno-furgon">Furgón {{ alumno.patente }}</div>
+          <ng-container *ngIf="alumno.nombre; else tarjetaCargando">
+            <div class="alumno-nombre">{{ alumno.nombre }}</div>
+            <div class="alumno-furgon">Furgón {{ alumno.patente }}</div>
+          </ng-container>
+          <ng-template #tarjetaCargando>
+            <div class="sc-skeleton sc-skeleton--title"></div>
+            <div class="sc-skeleton sc-skeleton--sub"></div>
+          </ng-template>
         </div>
         <span class="sc-badge" *ngIf="alumno.enRuta">En ruta</span>
         <span class="sc-badge sc-badge--muted" *ngIf="!alumno.enRuta">Sin ruta</span>
@@ -59,8 +80,10 @@
       </div>
     </div>
 
-    <p class="alumnos-vacio" *ngIf="!cargando && alumnos.length === 0">
-      No hay alumnos asociados a su cuenta.
-    </p>
+    <div class="sc-empty" *ngIf="!cargando && alumnos.length === 0">
+      <ion-icon name="school-outline"></ion-icon>
+      <p>No hay alumnos asociados a su cuenta.</p>
+      <small>Contacte al colegio o al administrador del furgón.</small>
+    </div>
   </div>
 </ion-content>

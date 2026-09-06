@@ -140,8 +140,13 @@ export class InicioApoderadoPage implements OnInit {
           patente: "",
           enRuta: false,
         }));
-        this.alumnos = filas;
-        this.cargando = false;
+        // Dentro de la zona: si el apoderado no tiene alumnos no va a
+        // correr ningun callback de fila despues, y sin esto el estado
+        // vacio no llegaba a pintarse al volver a la pestaña.
+        this.zone.run(() => {
+          this.alumnos = filas;
+          this.cargando = false;
+        });
 
         ids.forEach((id, i) => {
           const fila = filas[i];
@@ -193,7 +198,7 @@ export class InicioApoderadoPage implements OnInit {
         });
       })
       .catch(() => {
-        this.cargando = false;
+        this.zone.run(() => (this.cargando = false));
         this.avisarErrorCarga();
       });
   }

@@ -20,43 +20,90 @@
   <div class="sc-stack">
     <div class="roster-head">
       <p class="sc-section-title">Alumnos de hoy</p>
-      <span class="roster-count">{{ seleccionados.length }} de {{ roster.length }} seleccionados</span>
+      <span class="roster-count" *ngIf="!cargando && roster.length > 0">
+        {{ seleccionados.length }} de {{ roster.length }} seleccionados
+      </span>
+    </div>
+
+    <!-- Filas fantasma mientras se resuelve la cadena conductor ->
+         furgon -> alumno: sin esto la pantalla se veia igual que la de
+         un conductor sin alumnos asignados. -->
+    <div class="sc-rows" *ngIf="cargando">
+      <div class="sc-row sc-row--bordered sc-row--loading" *ngFor="let i of [1, 2, 3]">
+        <div class="sc-avatar sc-avatar--sm sc-skeleton"></div>
+        <div class="sc-row-body">
+          <div class="sc-skeleton sc-skeleton--title"></div>
+          <div class="sc-skeleton sc-skeleton--sub"></div>
+        </div>
+      </div>
     </div>
 
     <!-- La fila entera es el area de toque, no solo la casilla: el
          conductor marca alumnos de pie y en movimiento. -->
-    <div class="sc-rows">
+    <div class="sc-rows" *ngIf="!cargando">
       <div
         class="sc-row sc-row--bordered"
         [class.sc-row--selected]="alumno.on"
         *ngFor="let alumno of roster"
-        (click)="alumno.on = !alumno.on"
+        (click)="alternar(alumno)"
       >
         <div class="sc-avatar sc-avatar--sm">
           <ion-icon class="avatar-fallback" name="person-circle"></ion-icon>
         </div>
+
+        <!-- El nombre llega en una segunda consulta (persona), asi que
+             una fila puede existir todavia sin texto. -->
         <div class="sc-row-body">
-          <div class="sc-row-title">{{ alumno.nombre }}</div>
-          <div class="sc-row-sub">{{ alumno.direccion }}</div>
+          <ng-container *ngIf="alumno.nombre; else filaCargando">
+            <div class="sc-row-title">{{ alumno.nombre }}</div>
+            <div class="sc-row-sub">{{ alumno.direccion }}</div>
+          </ng-container>
+          <ng-template #filaCargando>
+            <div class="sc-skeleton sc-skeleton--title"></div>
+            <div class="sc-skeleton sc-skeleton--sub"></div>
+          </ng-template>
         </div>
-        <div class="sc-check" [class.sc-check--on]="alumno.on">
+
+        <div class="sc-check" [class.sc-check--on]="alumno.on" *ngIf="alumno.nombre">
           <ion-icon *ngIf="alumno.on" name="checkmark"></ion-icon>
         </div>
       </div>
     </div>
 
+    <div class="sc-empty" *ngIf="!cargando && roster.length === 0">
+      <ion-icon name="people-outline"></ion-icon>
+      <p>No tiene alumnos asignados a su furgón.</p>
+      <small>Contacte al administrador para que se los asigne.</small>
+    </div>
+
     <p class="sc-section-title auxiliar-title">Auxiliar a bordo</p>
-    <div class="auxiliar-chips">
+
+    <div class="auxiliar-chips" *ngIf="cargando">
+      <div class="sc-chip" *ngFor="let i of [1, 2]">
+        <span class="sc-skeleton sc-skeleton--chip"></span>
+      </div>
+    </div>
+
+    <div class="auxiliar-chips" *ngIf="!cargando">
       <div
         class="sc-chip"
         [class.sc-chip--on]="bind === auxiliar.id"
         *ngFor="let auxiliar of auxiliares"
-        (click)="bind = auxiliar.id"
+        (click)="elegirAuxiliar(auxiliar)"
       >
         <ion-icon name="people-outline"></ion-icon>
-        <span>{{ auxiliar.nombres }} {{ auxiliar.apellidos }}</span>
+        <span *ngIf="auxiliar.nombres; else chipCargando">
+          {{ auxiliar.nombres }} {{ auxiliar.apellidos }}
+        </span>
+        <ng-template #chipCargando>
+          <span class="sc-skeleton sc-skeleton--chip"></span>
+        </ng-template>
       </div>
     </div>
+
+    <p class="auxiliar-vacio" *ngIf="!cargando && auxiliares.length === 0">
+      No hay auxiliares asignados a su furgón.
+    </p>
   </div>
 </ion-content>
 
@@ -72,7 +119,5 @@
     <ion-icon slot="start" name="play"></ion-icon>
     Comenzar ruta
   </ion-button>
-  <p class="comenzar-hint" *ngIf="!puedeComenzar">
-    Seleccione alumnos y un auxiliar para comenzar
-  </p>
+  <p class="comenzar-hint" *ngIf="!puedeComenzar">{{ hintComenzar }}</p>
 </ion-footer>
