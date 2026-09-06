@@ -1,0 +1,7 @@
+node_modules/
+# Copia de trabajo que hace `npm run pretest`: el emulador exige que el
+# archivo de reglas viva dentro del directorio del proyecto, y la fuente
+# real es ../firestore.rules.
+firestore.rules
+firebase-debug.log
+firestore-debug.log

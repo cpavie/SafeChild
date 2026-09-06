@@ -1,40 +1,38 @@
 rules_version = '2';
 
-// Borrador. Antes de desplegar (`firebase deploy --only firestore:rules`):
-// probarlo con el simulador de reglas de Firebase Console (o
-// `firebase emulators:start`) contra datos reales, para cada flujo (login,
-// ver alumno, editar perfil, tracking, comenzar/finalizar ruta).
+// ATENCION: estas reglas dependen de tres campos de respaldo
+// ("backlinks") que NO existian en el esquema original. Antes de
+// desplegarlas hay que sembrarlos con scripts/backfill-backlinks.js,
+// o la app se queda sin poder leer nada:
 //
-// Modelo de datos (inferido leyendo src/app, confirmado en consola):
-//   apoderado/{uid}  -> id_persona, id_alumnos: array<alumnoId>
-//   conductor/{uid}  -> id_persona, id_furgon, id_licencia, con_estado
-//   alumno/{id}      -> id_persona, id_furgon, alu_estado, alu_comentario
-//   furgon/{id}      -> id_conductor, fur_coordenadas, alumnos: array,
-//                        auxiliares: array
-//   auxiliar/{id}    -> id_persona, aux_estado
-//   persona/{id}     -> datos personales (sin campo de "dueño" propio)
-//   licencia/{id}    -> lic_foto
+//   persona/{id}   -> p_tipo    'apoderado' | 'conductor' | 'alumno' | 'auxiliar'
+//                     id_furgon  furgon al que pertenece (salvo apoderado)
+//                     id_alumno  solo en personas de alumno
+//   auxiliar/{id}  -> id_furgon
+//   licencia/{id}  -> id_furgon
 //
-// LIMITACION IMPORTANTE: el lenguaje de reglas de Firestore no permite
-// loops ni queries arbitrarias, solo get()/exists() de documentos
-// puntuales, PERO si permite comparar dos arrays ya leidos con
-// list.hasAny(list) sin iterar. Eso alcanza para "furgon": el apoderado
-// esta autorizado si furgon.alumnos y apoderado.id_alumnos tienen algun
-// elemento en comun (ver esApoderadoDelFurgon() mas abajo) - sin tocar
-// el flujo de asignacion de alumnos a furgon ni agregar campos nuevos.
+// POR QUE HACEN FALTA: el lenguaje de reglas no permite loops ni
+// queries, solo get()/exists() de documentos puntuales. Una regla sobre
+// persona/{personaId} recibe el id de la persona y nada mas: no hay
+// forma de preguntar "¿que alumno apunta a esta persona?" (busqueda
+// inversa). Sin un campo que apunte de vuelta al furgon, la unica regla
+// expresable era `allow read: if request.auth != null`, es decir
+// cualquier usuario autenticado podia leer los datos personales
+// (nombre, direccion, documento) de todos los ninos del sistema.
 //
-// Para "auxiliar", "persona" y "licencia" el mismo truco no alcanza:
-// no hay un array en esos documentos para cruzar con id_alumnos del
-// apoderado (el esquema no guarda el furgon "dueño" en el propio doc
-// de auxiliar/licencia). Ahi si se necesitaria un campo de respaldo
-// (p.ej. `id_furgon` en auxiliar) o denormalizar
-// `apoderados_autorizados` en cada uno. Por eso esas tres colecciones
-// quedan por ahora con lectura abierta a cualquier usuario AUTENTICADO
-// (mejora grande vs. reglas de prueba abiertas a cualquiera, pero no
-// aislada por dueño para el lado apoderado).
+// La app nunca crea ni borra documentos (solo update; verificado en
+// src/app), asi que no se permite create/delete: el alta de usuarios se
+// hace fuera de banda y no necesita pasar por estas reglas.
+//
+// Los backlinks tampoco aparecen en ninguna lista de campos escribibles,
+// asi que un cliente no puede reasignarse a otro furgon para escalar.
+//
+// Probar antes de desplegar: `npm run test:rules` (usa el emulador).
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    /* ------------------------------------------------------ identidad */
 
     function signedIn() {
       return request.auth != null;
@@ -50,89 +48,153 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/conductor/$(request.auth.uid));
     }
 
+    // data.get(campo, default) en vez de data.campo: acceder a un campo
+    // ausente es un error de evaluacion, y un error deniega la peticion
+    // entera aunque otra rama del OR si autorizara. Con default el que
+    // le falte el backlink simplemente no calza con nada (falla cerrado).
     function idAlumnosDelApoderado() {
-      return get(/databases/$(database)/documents/apoderado/$(request.auth.uid)).data.id_alumnos;
+      return get(/databases/$(database)/documents/apoderado/$(request.auth.uid))
+        .data.get('id_alumnos', []);
     }
 
     function furgonDelConductor() {
-      return get(/databases/$(database)/documents/conductor/$(request.auth.uid)).data.id_furgon;
+      return get(/databases/$(database)/documents/conductor/$(request.auth.uid))
+        .data.get('id_furgon', '');
+    }
+
+    // exists() antes del get(): un id_furgon colgado (documento borrado)
+    // haria fallar la lectura de .data y con ella toda la regla.
+    function alumnosDelFurgon(furgonId) {
+      return furgonId != '' &&
+        exists(/databases/$(database)/documents/furgon/$(furgonId))
+          ? get(/databases/$(database)/documents/furgon/$(furgonId)).data.get('alumnos', [])
+          : [];
     }
 
     function alumnosDelFurgonDelConductor() {
-      return get(/databases/$(database)/documents/furgon/$(furgonDelConductor())).data.alumnos;
+      return alumnosDelFurgon(furgonDelConductor());
     }
 
-    // El apoderado esta autorizado a ver un furgon si al menos uno de
-    // sus alumnos (id_alumnos) esta en la lista de alumnos de ese
-    // furgon. hasAny() compara los dos arrays sin loop, asi que si es
-    // expresable en reglas (a diferencia de auxiliar/persona/licencia,
-    // ver comentario arriba).
+    // El apoderado esta autorizado sobre un furgon si al menos uno de
+    // sus alumnos esta en la lista de ese furgon. hasAny() compara los
+    // dos arrays sin iterar, que es lo unico parecido a un loop que las
+    // reglas permiten.
     function esApoderadoDelFurgon(furgonId) {
       return esApoderado() &&
-        idAlumnosDelApoderado().hasAny(
-          get(/databases/$(database)/documents/furgon/$(furgonId)).data.alumnos
-        );
+        idAlumnosDelApoderado().hasAny(alumnosDelFurgon(furgonId));
     }
 
-    // Verificable con precision: persona propia del apoderado o del
-    // conductor autenticado. El caso "apoderado edita la persona de su
-    // alumno" (edit-alumno.page.ts) no se puede verificar con precision
-    // sin loops (ver limitacion arriba), asi que ahi solo exigimos que
-    // quien escribe sea un apoderado real, no cualquier autenticado.
     function esPersonaPropia(personaId) {
       return (esApoderado() &&
-          get(/databases/$(database)/documents/apoderado/$(request.auth.uid)).data.id_persona == personaId) ||
+          get(/databases/$(database)/documents/apoderado/$(request.auth.uid))
+            .data.get('id_persona', '') == personaId) ||
         (esConductor() &&
-          get(/databases/$(database)/documents/conductor/$(request.auth.uid)).data.id_persona == personaId);
+          get(/databases/$(database)/documents/conductor/$(request.auth.uid))
+            .data.get('id_persona', '') == personaId);
     }
 
-    // apoderado/{uid} y conductor/{uid}: el id del documento ES el uid
-    // de Firebase Auth (ver auth.service.ts), asi que aqui si se puede
-    // restringir con precision.
+    /* --------------------------------------------------------- campos */
+
+    // Lista blanca de campos modificables. Se compara contra resource
+    // (el documento tal como esta guardado), no contra request.resource,
+    // para que el cliente no pueda declarar sus propios permisos en el
+    // mismo write que intenta hacer.
+    function soloCambia(campos) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(campos);
+    }
+
+    /* -------------------------------------------------------- reglas */
+
+    // apoderado/{uid} y conductor/{uid}: el id del documento ES el uid de
+    // Firebase Auth (ver auth.service.ts).
+    //
+    // Antes ambos eran `allow read: if signedIn()`, o sea cualquier
+    // usuario podia listar telefonos y correos de todos los apoderados y
+    // conductores. Nadie en la app lee el documento de OTRO apoderado.
     match /apoderado/{uid} {
-      allow read: if signedIn();
-      allow write: if signedIn() && request.auth.uid == uid;
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn() && request.auth.uid == uid &&
+        soloCambia(['apo_telefono']);
     }
 
+    // Al conductor si lo lee el apoderado que va en su furgon
+    // (rastreo-apoderado muestra quien conduce).
     match /conductor/{uid} {
-      allow read: if signedIn();
-      allow write: if signedIn() && request.auth.uid == uid;
+      allow read: if (signedIn() && request.auth.uid == uid) ||
+        esApoderadoDelFurgon(resource.data.get('id_furgon', ''));
+      allow update: if signedIn() && request.auth.uid == uid &&
+        soloCambia(['con_telefono', 'con_estado']);
     }
 
     // alumno/{id}: relacion directa y verificable en ambos sentidos.
+    // El apoderado solo toca el comentario; el estado de a bordo es del
+    // conductor (antes cualquiera de los dos podia escribir todo el
+    // documento, incluido el id_furgon que decide quien lo puede ver).
     match /alumno/{alumnoId} {
-      allow read, write: if signedIn() && (
-        (esApoderado() && alumnoId in idAlumnosDelApoderado()) ||
-        (esConductor() && alumnoId in alumnosDelFurgonDelConductor())
-      );
+      allow read: if (esApoderado() && alumnoId in idAlumnosDelApoderado()) ||
+        (esConductor() && alumnoId in alumnosDelFurgonDelConductor());
+      allow update: if
+        (esApoderado() && alumnoId in idAlumnosDelApoderado() &&
+          soloCambia(['alu_comentario'])) ||
+        (esConductor() && alumnoId in alumnosDelFurgonDelConductor() &&
+          soloCambia(['alu_estado']));
     }
 
-    // furgon: lectura restringida con precision a su propio conductor
-    // o a un apoderado con al menos un alumno en ese furgon.
     match /furgon/{furgonId} {
       allow read: if esApoderadoDelFurgon(furgonId) ||
         (esConductor() && furgonDelConductor() == furgonId);
-      allow write: if esConductor() && furgonDelConductor() == furgonId;
+      allow update: if esConductor() && furgonDelConductor() == furgonId &&
+        soloCambia(['fur_coordenadas']);
     }
 
-    // auxiliar/persona/licencia: ver limitacion arriba, lectura
-    // autenticada general como piso minimo.
-
+    // auxiliar: lo lee su conductor y los apoderados del mismo furgon
+    // (modal "Auxiliar" del rastreo). El backlink id_furgon es lo que
+    // hace expresable ese "del mismo furgon".
     match /auxiliar/{auxiliarId} {
-      allow read: if signedIn();
-      allow write: if esConductor() &&
-        auxiliarId in get(/databases/$(database)/documents/furgon/$(furgonDelConductor())).data.auxiliares;
+      allow read: if
+        (esConductor() && resource.data.get('id_furgon', '') == furgonDelConductor()) ||
+        esApoderadoDelFurgon(resource.data.get('id_furgon', ''));
+      allow update: if esConductor() &&
+        resource.data.get('id_furgon', '') == furgonDelConductor() &&
+        soloCambia(['aux_estado']);
     }
 
+    // persona: la coleccion sensible (nombres, direcciones, documento de
+    // identidad de menores). Cuatro accesos legitimos, cada uno acotado:
+    //   1. la propia
+    //   2. apoderado -> persona de SU alumno (id_alumno, exacto)
+    //   3. conductor -> personas de su furgon (alumnos y auxiliares)
+    //   4. apoderado -> conductor y auxiliares de su furgon
+    // El caso 4 excluye p_tipo 'alumno' a proposito: si no, un apoderado
+    // podria leer los datos de los demas ninos de la misma furgoneta.
     match /persona/{personaId} {
-      allow read: if signedIn();
-      allow write: if esPersonaPropia(personaId) || esApoderado() || esConductor();
+      allow read: if esPersonaPropia(personaId) ||
+        (esApoderado() &&
+          resource.data.get('id_alumno', '') in idAlumnosDelApoderado()) ||
+        (esConductor() &&
+          resource.data.get('id_furgon', '') == furgonDelConductor()) ||
+        (resource.data.get('p_tipo', '') in ['conductor', 'auxiliar'] &&
+          esApoderadoDelFurgon(resource.data.get('id_furgon', '')));
+
+      // Antes: `esPersonaPropia() || esApoderado() || esConductor()`, es
+      // decir cualquier apoderado podia reescribir la direccion de
+      // cualquier persona del sistema. Ahora solo la propia o la de sus
+      // alumnos, y solo los dos campos que la app edita.
+      allow update: if (esPersonaPropia(personaId) ||
+          (esApoderado() &&
+            resource.data.get('id_alumno', '') in idAlumnosDelApoderado())) &&
+        soloCambia(['p_direccion', 'p_comuna']);
     }
 
+    // licencia: la ve el propio conductor y los apoderados de su furgon
+    // (modal "Conductor" muestra la foto de la licencia). Nadie la
+    // escribe desde la app, asi que no hay regla de escritura.
     match /licencia/{licenciaId} {
-      allow read: if signedIn();
-      allow write: if esConductor() &&
-        get(/databases/$(database)/documents/conductor/$(request.auth.uid)).data.id_licencia == licenciaId;
+      allow read: if
+        (esConductor() &&
+          get(/databases/$(database)/documents/conductor/$(request.auth.uid))
+            .data.get('id_licencia', '') == licenciaId) ||
+        esApoderadoDelFurgon(resource.data.get('id_furgon', ''));
     }
 
     match /{document=**} {
