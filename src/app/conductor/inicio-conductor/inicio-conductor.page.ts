@@ -29,6 +29,10 @@ export class InicioConductorPage implements OnInit {
   // compuesto ("Ana María Soto Rojas" daria p_nombres "Ana").
   auxiliares: Array<{ id: string; nombres: string; apellidos: string }> = [];
   bind: string;
+  // Distingue "todavia no se cuantos alumnos hay" de "no hay ninguno":
+  // sin esto la pantalla mostraba una lista en blanco durante la carga,
+  // identica a la de un conductor sin alumnos asignados.
+  cargando = true;
 
   constructor(
     public AFA: AngularFireAuth,
@@ -80,6 +84,43 @@ export class InicioConductorPage implements OnInit {
     return this.seleccionados.length > 0 && !!this.bind;
   }
 
+  // El pie decia siempre "Seleccione alumnos y un auxiliar", incluso
+  // cuando no habia ninguno que seleccionar: el conductor no tenia como
+  // saber si la lista estaba cargando, vacia o si le faltaba tocar algo.
+  get hintComenzar(): string {
+    if (this.cargando) {
+      return "Cargando la lista de alumnos…";
+    }
+    if (this.roster.length === 0) {
+      return "No hay alumnos asignados a su furgón";
+    }
+    if (this.auxiliares.length === 0) {
+      return "No hay auxiliares asignados a su furgón";
+    }
+    if (this.seleccionados.length === 0) {
+      return "Seleccione los alumnos que van a bordo";
+    }
+    return "Seleccione un auxiliar para comenzar";
+  }
+
+  // Una fila sin nombre todavia no termina de cargar; dejarla marcar
+  // guardaria "" como nombre del alumno en la ruta (dataService
+  // .nombres_alumnos alimenta la cabecera del rastreo).
+  alternar(alumno: { nombre: string; on: boolean }) {
+    if (alumno.nombre) {
+      alumno.on = !alumno.on;
+    }
+  }
+
+  // Mismo motivo que alternar(): comenzarRuta() copia nombres y
+  // apellidos del chip elegido a dataService, y elegir uno a medio
+  // cargar dejaba la cabecera del rastreo sin el nombre del auxiliar.
+  elegirAuxiliar(auxiliar: { id: string; nombres: string }) {
+    if (auxiliar.nombres) {
+      this.bind = auxiliar.id;
+    }
+  }
+
   private avisandoErrorCarga = false;
 
   // Cadena de lecturas anidadas (conductor -> persona -> furgon ->
@@ -92,6 +133,10 @@ export class InicioConductorPage implements OnInit {
       return;
     }
     this.avisandoErrorCarga = true;
+    // Si falla la primera lectura no llega nunca el roster, y sin
+    // apagar el flag la pantalla se quedaria con las filas fantasma
+    // girando para siempre.
+    this.zone.run(() => (this.cargando = false));
     this.toast("No se pudo cargar parte de la información. Intente de nuevo.", "danger");
     this.avisandoErrorCarga = false;
   }
@@ -105,6 +150,7 @@ export class InicioConductorPage implements OnInit {
    * carga no se notaba porque el arranque dispara deteccion igual.
    */
   getInfo() {
+    this.cargando = true;
     this.db
       .collection("conductor")
       .doc(this.uid)
@@ -137,7 +183,6 @@ export class InicioConductorPage implements OnInit {
                   nombres: "",
                   apellidos: "",
                 }));
-                this.auxiliares = filasAux;
                 idsAuxiliares.forEach((id, i) => {
                   const fila = filasAux[i];
                   this.db
@@ -173,7 +218,16 @@ export class InicioConductorPage implements OnInit {
                   direccion: "",
                   on: false,
                 }));
-                this.roster = filasRoster;
+                // Las dos listas y el flag se publican juntos y dentro
+                // de la zona: si el furgon no tiene alumnos, ningun
+                // callback de fila va a correr despues, asi que esta es
+                // la unica oportunidad de disparar deteccion de cambios
+                // y mostrar el estado vacio.
+                this.zone.run(() => {
+                  this.auxiliares = filasAux;
+                  this.roster = filasRoster;
+                  this.cargando = false;
+                });
                 idsAlumnos.forEach((id, i) => {
                   const fila = filasRoster[i];
                   this.db

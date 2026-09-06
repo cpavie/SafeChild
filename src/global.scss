@@ -364,6 +364,102 @@ ion-button.sc-btn[fill="clear"] {
   font-size: 1.1rem;
 }
 
+/* --------------------------------------------------- carga y estado vacio */
+
+/* Placeholder de carga. Las pantallas de inicio arman la lista en una
+ * primera lectura y rellenan cada fila con una segunda consulta
+ * anidada, asi que hay una ventana en la que las filas existen pero
+ * estan sin texto. Antes eso se veia como tarjetas en blanco, sin
+ * distinguirse de "no hay nada que mostrar". */
+.sc-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--sc-surface-2);
+  border-radius: 6px;
+}
+
+.sc-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  /* rgba sobre el color de texto en vez de --sc-line-soft: ese token es
+     opaco en modo oscuro y el degradado no se fundiria con el fondo. */
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--ion-text-color-rgb), 0.07),
+    transparent
+  );
+  animation: sc-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes sc-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* El bloque gris ya comunica "cargando" por si solo, asi que para quien
+   pidio menos movimiento se quita el brillo y no se reemplaza por nada. */
+@media (prefers-reduced-motion: reduce) {
+  .sc-skeleton::after {
+    animation: none;
+  }
+}
+
+.sc-skeleton--title {
+  height: 11px;
+  width: 58%;
+}
+
+.sc-skeleton--sub {
+  height: 9px;
+  width: 38%;
+  margin-top: 7px;
+}
+
+.sc-skeleton--chip {
+  display: block;
+  height: 10px;
+  width: 64px;
+  border-radius: 999px;
+}
+
+/* Las filas fantasma no deben parecer pulsables: sin esto el conductor
+   puede intentar marcar un alumno que todavia no existe. */
+.sc-row--loading,
+.sc-card--loading {
+  pointer-events: none;
+}
+
+/* Estado vacio compartido. */
+.sc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--sc-muted);
+}
+
+.sc-empty ion-icon {
+  font-size: 34px;
+  color: var(--sc-muted-2);
+}
+
+.sc-empty p {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.sc-empty small {
+  font-size: 0.75rem;
+  color: var(--sc-muted-2);
+}
+
 /* ---------------------------------------------------------------- avatares */
 
 .avatar,
