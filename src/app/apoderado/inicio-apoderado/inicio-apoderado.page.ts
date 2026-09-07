@@ -7,7 +7,7 @@ import { DatosService } from "../../servicios/datos.service";
 import { AlertController, ModalController, ToastController } from "@ionic/angular";
 import { EditAlumnoPage } from "../edit-alumno/edit-alumno.page";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
-import { Apoderado, Furgon, Persona } from "src/app/models/safechild.models";
+import { ALU_ESTADO, Apoderado, Furgon, Persona } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-inicio-apoderado",
@@ -24,6 +24,10 @@ export class InicioApoderadoPage implements OnInit {
     nombre: string;
     patente: string;
     enRuta: boolean;
+    // Se guarda aparte de enRuta porque no es su negacion: "no subio"
+    // y "todavia no sale" son los dos "sin ruta", y al apoderado le
+    // importa muchisimo la diferencia.
+    noAbordo: boolean;
   }> = [];
   // Evita que "No hay alumnos asociados a su cuenta" aparezca mientras
   // la primera lectura sigue en curso.
@@ -139,6 +143,7 @@ export class InicioApoderadoPage implements OnInit {
           nombre: "",
           patente: "",
           enRuta: false,
+          noAbordo: false,
         }));
         // Dentro de la zona: si el apoderado no tiene alumnos no va a
         // correr ningun callback de fila despues, y sin esto el estado
@@ -156,7 +161,9 @@ export class InicioApoderadoPage implements OnInit {
             .get()
             .forEach((alumnoDoc) => {
               this.zone.run(() => {
-                fila.enRuta = alumnoDoc.get("alu_estado") == 1;
+                const estado = alumnoDoc.get("alu_estado");
+                fila.enRuta = estado == ALU_ESTADO.ABORDO;
+                fila.noAbordo = estado == ALU_ESTADO.NO_ABORDO;
               });
 
               // doc(undefined) no falla al construirse: Firestore lo
@@ -236,7 +243,7 @@ export class InicioApoderadoPage implements OnInit {
         .doc(id_alum)
         .get()
         .forEach((doc) => {
-          if (doc.get("alu_estado") == 1) {
+          if (doc.get("alu_estado") == ALU_ESTADO.ABORDO) {
             // doc.data() no trae el id del propio documento: sin esto,
             // getDataAlumno().id_alumno queda undefined, lo que hace
             // que RastreoApoderadoGuard bloquee SIEMPRE el acceso a
@@ -261,6 +268,11 @@ export class InicioApoderadoPage implements OnInit {
                   this.dataService.getDataAlumno().id_alumno,
                 ]);
               });
+          } else if (doc.get("alu_estado") == ALU_ESTADO.NO_ABORDO) {
+            // Sin este caso el mensaje era "no se encuentra en ruta",
+            // que suena a que todavia no sale y no a que el furgon ya
+            // paso sin el.
+            this.toast("Su alumno no abordó el furgón en esta ruta");
           } else {
             this.toast("el alumno seleccionado no se encuentra en ruta");
           }

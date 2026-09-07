@@ -30,9 +30,28 @@ export interface Conductor {
   con_fotoperfil?: string;
 }
 
+/**
+ * Estados de alu_estado. Antes eran 0 y 1 sueltos repartidos por toda
+ * la app, y no habia forma de distinguir "lo dejamos en su casa" de
+ * "nunca subio": las dos cosas eran 0, asi que marcar a un alumno que
+ * no abordo le avisaba a su apoderado que habia llegado a destino.
+ *
+ * NO_ABORDO es terminal hasta la ruta siguiente: comenzarRuta() vuelve
+ * a poner ABORDO a los alumnos que el conductor seleccione.
+ */
+export const ALU_ESTADO = {
+  /** Fuera de ruta: entregado, o la ruta todavia no comienza. */
+  FUERA: 0,
+  /** A bordo del furgon. */
+  ABORDO: 1,
+  /** El furgon paso y el alumno no subio. */
+  NO_ABORDO: 2,
+};
+
 export interface Alumno {
   id_persona: string;
   id_furgon: string;
+  /** Ver ALU_ESTADO. */
   alu_estado: number;
   alu_comentario?: string;
 }

@@ -5,7 +5,7 @@ import { Router } from "@angular/router";
 import { AlertController, ModalController, ToastController } from "@ionic/angular";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { DatosService } from "src/app/servicios/datos.service";
-import { Auxiliar, Conductor, Furgon, Persona } from "src/app/models/safechild.models";
+import { ALU_ESTADO, Auxiliar, Conductor, Furgon, Persona } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-inicio-conductor",
@@ -306,7 +306,7 @@ export class InicioConductorPage implements OnInit {
     // checkboxes era sparse y no reflejaba el estado real).
     for (const alumno of seleccionados) {
       this.db.collection("alumno").doc(alumno.id).update({
-        alu_estado: 1,
+        alu_estado: ALU_ESTADO.ABORDO,
       });
     }
     // El id del documento conductor/{uid} ES el uid de Firebase
