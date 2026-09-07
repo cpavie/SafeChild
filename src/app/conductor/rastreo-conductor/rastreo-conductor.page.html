@@ -44,9 +44,15 @@
             <div class="sc-row-title">{{ nombre }}</div>
             <div class="sc-row-sub">A bordo</div>
           </div>
-          <!-- "Bajar" en vez de un chevron: el diseño nombra la accion
-               porque marca la entrega del alumno, no un despliegue. -->
-          <div class="bajar-btn" (click)="finalizarRutaAlum(ids_alumnos[i])">Bajar</div>
+          <!-- Dos acciones, no una: "Bajar" marca la entrega y "No
+               subio" saca de la ruta a quien nunca abordo. Sin la
+               segunda, la unica forma de cerrar la ruta era declarar
+               entregado a un niño que no viajo, y su apoderado recibia
+               "llego a su destino". -->
+          <div class="fila-acciones">
+            <div class="bajar-btn" (click)="finalizarRutaAlum(ids_alumnos[i])">Bajar</div>
+            <div class="no-abordo-btn" (click)="marcarNoAbordo(ids_alumnos[i])">No subió</div>
+          </div>
         </div>
       </div>
 

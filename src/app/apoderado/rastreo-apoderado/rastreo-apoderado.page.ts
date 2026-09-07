@@ -15,7 +15,7 @@ import { InfoAuxiliarPage } from "../info-auxiliar/info-auxiliar.page";
 import { Subscription } from "rxjs";
 import { AngularFireAuth } from "@angular/fire/auth";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
-import { Auxiliar, Conductor, Persona } from "src/app/models/safechild.models";
+import { ALU_ESTADO, Auxiliar, Conductor, Persona } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-rastreo-apoderado",
@@ -146,15 +146,28 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
       });
 
     // Escucha en tiempo real el estado del alumno para avisar apenas el
-    // conductor marca que llego a destino.
+    // conductor lo saca de la ruta. Los dos desenlaces terminan el
+    // rastreo, pero NO dicen lo mismo: antes ambos eran alu_estado 0 y
+    // al apoderado de un niño que nunca subio se le avisaba que habia
+    // llegado a su destino.
     this.subAlumno = this.db
       .collection("alumno")
       .doc(this.dataService.getDataAlumno().id_alumno)
       .valueChanges()
       .subscribe((data: any) => {
-        if (data && data.alu_estado == 0) {
+        if (!data) {
+          return;
+        }
+        if (data.alu_estado == ALU_ESTADO.FUERA) {
           this.dataService.setDataAlumno({});
-          this.toastA();
+          this.avisarFinDeRuta("Su alumno llego a su destino");
+        } else if (data.alu_estado == ALU_ESTADO.NO_ABORDO) {
+          this.dataService.setDataAlumno({});
+          this.avisarFinDeRuta(
+            "Su alumno no abordo el furgon",
+            "El conductor indico que no subio. Contactelo si no sabe donde esta.",
+            "warning"
+          );
         }
       });
   }
@@ -179,10 +192,15 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
     toast.present();
   }
 
-  async toastA() {
+  // "No abordo" se muestra mas rato y en color de aviso: es informacion
+  // que el apoderado necesita accionar (llamar al colegio, al conductor),
+  // no una confirmacion tranquilizadora como la de la entrega.
+  async avisarFinDeRuta(header: string, message?: string, color?: string) {
     const toast = await this.toastController.create({
-      header: "Su alumno llego a su destino",
-      duration: 4000,
+      header,
+      message,
+      color,
+      duration: color ? 8000 : 4000,
       position: "middle",
     });
     toast.present();

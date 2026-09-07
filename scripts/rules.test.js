@@ -154,6 +154,16 @@ async function main() {
   await prueba("conductor lee su propia licencia", () =>
     assertSucceeds(leer(como("condA"), "licencia", "lic1"))
   );
+  // alu_estado 2 = "no abordo" (ver ALU_ESTADO en safechild.models.ts).
+  // Va por la misma lista blanca que el 1, pero se prueba aparte para
+  // que un cambio en la regla no rompa ese flujo en silencio.
+  //
+  // Ojo con el orden: este caso deja al1 en 2 y el siguiente lo devuelve
+  // a 1, que es lo que hace que el caso denegado de mas abajo (apoderado
+  // escribiendo un 2) sea un cambio real y no un no-op que pasa solo.
+  await prueba("conductor marca a un alumno suyo como que no abordo", () =>
+    assertSucceeds(escribir(como("condA"), "alumno", "al1", { alu_estado: 2 }))
+  );
   await prueba("conductor marca alu_estado de un alumno suyo", () =>
     assertSucceeds(escribir(como("condA"), "alumno", "al1", { alu_estado: 1 }))
   );
@@ -208,6 +218,9 @@ async function main() {
   // pero si escribe el caso con el mismo valor la prueba no prueba nada.
   await prueba("apoderado NO marca a su alumno como a bordo (alu_estado es del conductor)", () =>
     assertFails(escribir(como("apoA"), "alumno", "al1", { alu_estado: 9 }))
+  );
+  await prueba("apoderado NO marca a su alumno como que no abordo", () =>
+    assertFails(escribir(como("apoA"), "alumno", "al1", { alu_estado: 2 }))
   );
   await prueba("conductor NO lee la persona de un alumno de otro furgon", () =>
     assertFails(leer(como("condB"), "persona", "pAl1"))

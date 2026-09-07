@@ -54,7 +54,13 @@
           </ng-template>
         </div>
         <span class="sc-badge" *ngIf="alumno.enRuta">En ruta</span>
-        <span class="sc-badge sc-badge--muted" *ngIf="!alumno.enRuta">Sin ruta</span>
+        <!-- "No subió" es su propio estado, no un "sin ruta" mas: el
+             apoderado tiene que poder ver en el inicio que el furgon
+             paso sin su hijo, no solo en el aviso del momento. -->
+        <span class="sc-badge sc-badge--alerta" *ngIf="alumno.noAbordo">No subió</span>
+        <span class="sc-badge sc-badge--muted" *ngIf="!alumno.enRuta && !alumno.noAbordo">
+          Sin ruta
+        </span>
       </div>
 
       <!-- "Rastrear" se muestra siempre, tambien cuando el badge dice

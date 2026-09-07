@@ -18,13 +18,33 @@
   margin: 8px 0 0;
 }
 
-.bajar-btn {
+.fila-acciones {
   flex: none;
-  padding: 8px 14px;
+  display: flex;
+  gap: 6px;
+}
+
+.bajar-btn,
+.no-abordo-btn {
+  flex: none;
+  padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(var(--ion-color-secondary-rgb), 0.14);
-  color: var(--ion-color-secondary);
   font-size: 0.69rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.bajar-btn {
+  background: rgba(var(--ion-color-secondary-rgb), 0.14);
+  color: var(--ion-color-secondary);
+}
+
+/* En gris, no en rojo: "no subio" es un hecho que hay que registrar,
+   no un error del conductor ni una alarma. El rojo de esta pantalla
+   esta reservado para "Finalizar ruta". */
+.no-abordo-btn {
+  background: var(--sc-surface-2);
+  color: var(--sc-muted);
+  border: 1px solid var(--sc-line-soft);
 }

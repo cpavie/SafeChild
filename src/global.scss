@@ -546,6 +546,13 @@ ion-button.sc-btn[fill="clear"] {
   color: var(--sc-muted);
 }
 
+/* Amarillo, no rojo: "no subio" pide atencion del apoderado pero no es
+   una emergencia declarada por la app. */
+.sc-badge--alerta {
+  background: var(--sc-yellow-bg);
+  color: var(--sc-yellow-fg);
+}
+
 .sc-badge--muted::before {
   display: none;
 }

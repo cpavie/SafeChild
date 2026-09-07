@@ -13,6 +13,7 @@ import { AngularFireAuth } from "@angular/fire/auth";
 import { Subscription } from "rxjs";
 import { auditTime, filter } from "rxjs/operators";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
+import { ALU_ESTADO } from "src/app/models/safechild.models";
 
 @Component({
   selector: "app-rastreo-conductor",
@@ -207,38 +208,73 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
         },
         {
           text: "Confirmar",
-          handler: (b) => {
-            this.db.collection("alumno").doc(bind).update({
-              alu_estado: 0,
-            });
-            // nombres_alumnos se recorta junto con ids_alumnos, en el
-            // mismo indice: estan pareados por posicion (ver el
-            // *ngFor en el template), asi que recortar solo uno
-            // desalinea los nombres mostrados con el resto de
-            // alumnos.
-            const index = this.ids_alumnos.indexOf(bind);
-            if (index > -1) {
-              this.ids_alumnos = [
-                ...this.ids_alumnos.slice(0, index),
-                ...this.ids_alumnos.slice(index + 1),
-              ];
-              this.nombres_alumnos = [
-                ...this.nombres_alumnos.slice(0, index),
-                ...this.nombres_alumnos.slice(index + 1),
-              ];
-            }
-            if (!this.ids_alumnos?.length) {
-              this.dataService.ids_alumnos.length = 0;
-              this.dataService.nombres_alumnos.length = 0;
-              this.toast();
-            } else {
-              this.reload("tabs-conductor/rastreo-conductor");
-            }
-          },
+          handler: (b) => this.sacarDeRuta(bind, ALU_ESTADO.FUERA),
         },
       ],
     });
     await alert.present();
+  }
+
+  /*
+   * Sin esto no habia forma de cerrar una ruta si un alumno
+   * seleccionado nunca subia: la unica salida era pulsar "Bajar", que
+   * lo marca como entregado y le avisa al apoderado que su hijo llego a
+   * destino. Un aviso falso sobre un niño que no viajo.
+   *
+   * Se avisa en el propio dialogo de que el apoderado va a recibir la
+   * notificacion, porque es una accion que se ve desde el otro lado y
+   * no tiene deshacer.
+   */
+  async marcarNoAbordo(bind) {
+    const index = this.ids_alumnos.indexOf(bind);
+    const nombre = index > -1 ? this.nombres_alumnos[index] : "el alumno";
+    const alert = await this.alertController.create({
+      header: "¿El alumno no subio al furgon?",
+      message: `Se sacara a ${nombre} de la ruta y se le avisara a su apoderado que no abordo. Esta accion no se puede deshacer.`,
+      buttons: [
+        {
+          text: "Cancelar",
+          role: "cancel",
+          handler: (a) => {},
+        },
+        {
+          text: "Confirmar",
+          handler: (b) => this.sacarDeRuta(bind, ALU_ESTADO.NO_ABORDO),
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  // Camino comun de "Bajar" y "No subio": lo unico que cambia entre los
+  // dos es el alu_estado que queda escrito, que es justamente lo que
+  // lee la app del apoderado para decidir que mensaje mostrar.
+  private sacarDeRuta(bind: string, estado: number) {
+    this.db.collection("alumno").doc(bind).update({
+      alu_estado: estado,
+    });
+    // nombres_alumnos se recorta junto con ids_alumnos, en el mismo
+    // indice: estan pareados por posicion (ver el *ngFor en el
+    // template), asi que recortar solo uno desalinea los nombres
+    // mostrados con el resto de alumnos.
+    const index = this.ids_alumnos.indexOf(bind);
+    if (index > -1) {
+      this.ids_alumnos = [
+        ...this.ids_alumnos.slice(0, index),
+        ...this.ids_alumnos.slice(index + 1),
+      ];
+      this.nombres_alumnos = [
+        ...this.nombres_alumnos.slice(0, index),
+        ...this.nombres_alumnos.slice(index + 1),
+      ];
+    }
+    if (!this.ids_alumnos?.length) {
+      this.dataService.ids_alumnos.length = 0;
+      this.dataService.nombres_alumnos.length = 0;
+      this.toast();
+    } else {
+      this.reload("tabs-conductor/rastreo-conductor");
+    }
   }
 
   // El mapa sigue al furgon, pero el conductor puede haberlo arrastrado
@@ -264,7 +300,8 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
       position: "middle",
     });
     toast.present();
-    // Los alumnos ya quedaron en alu_estado 0 al bajarlos uno por uno.
+    // Los alumnos ya quedaron fuera de ruta al sacarlos uno por uno,
+    // sea como entregados o como "no abordo".
     await this.liberarRuta();
     toast.onWillDismiss().then(() => this.volverAlInicio());
   }
@@ -311,7 +348,8 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
 
   /*
    * Libera al conductor y al auxiliar. NO toca alu_estado: el estado de
-   * un alumno solo cambia al bajarlo con "Bajar", uno por uno.
+   * un alumno solo cambia al sacarlo de la ruta uno por uno, con
+   * "Bajar" (entregado) o "No subio".
    *
    * Antes finalizar la ruta ponia alu_estado 0 a todos los que
    * siguieran a bordo, y en la app del apoderado ese cambio dispara
