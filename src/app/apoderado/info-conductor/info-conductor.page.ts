@@ -19,14 +19,19 @@ export class InfoConductorPage implements OnInit {
     public db: AngularFirestore
   ) {}
 
-  ngOnInit() {
-    this.db
-      .collection("licencia")
-      .doc(this.dataConductor.id_licencia)
-      .get()
-      .forEach((doc) => {
-        this.img_licencia = doc.get("lic_foto");
-      });
+  async ngOnInit() {
+    const id = this.dataConductor && this.dataConductor.id_licencia;
+    if (!id) {
+      return;
+    }
+    try {
+      const doc = await this.db.collection("licencia").doc(id).get().toPromise();
+      this.img_licencia = doc.get("lic_foto");
+    } catch {
+      // La lectura no tenia manejo de error: si fallaba (reglas, doc
+      // borrado) quedaba una promesa rechazada suelta en la consola. La
+      // foto es accesoria, asi que basta con no mostrarla.
+    }
   }
 
   // `ir` viaja de vuelta a rastreo-apoderado, que abre el modal de la

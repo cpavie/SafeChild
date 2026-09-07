@@ -50,20 +50,43 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
     }
   }
 
-  ngOnInit() {
-    if (!this.map) {
-      this.db
-        .collection("furgon")
-        .doc(this.dataService.getDataAlumno().id_furgon)
-        .get()
-        .forEach((doc) => {
-          this.coords = doc.get("fur_coordenadas");
-          this.lat = this.coords[0];
-          this.lon = this.coords[1];
-          this.leafletMap();
-        })
-        .catch(() => this.avisarErrorCarga());
+  /*
+   * Lee un documento suelto. Concentra las dos precauciones que antes
+   * se repetian a mano en cada nivel de las cadenas anidadas:
+   *
+   *  - id vacio: doc(undefined) NO falla al construirse (Firestore lo
+   *    toma como "genera un id nuevo") y recien el get() se rechaza por
+   *    reglas, asi que se corta antes.
+   *  - error de lectura: se avisa una sola vez y se devuelve null, en
+   *    vez de dejar la pantalla a medio cargar en silencio.
+   */
+  private async leer(coleccion: string, id: string) {
+    if (!id) {
+      return null;
     }
+    try {
+      return await this.db.collection(coleccion).doc(id).get().toPromise();
+    } catch {
+      this.avisarErrorCarga();
+      return null;
+    }
+  }
+
+  async ngOnInit() {
+    if (this.map) {
+      return;
+    }
+    const furgonDoc = await this.leer(
+      "furgon",
+      this.dataService.getDataAlumno().id_furgon
+    );
+    if (!furgonDoc) {
+      return;
+    }
+    this.coords = furgonDoc.get("fur_coordenadas");
+    this.lat = this.coords[0];
+    this.lon = this.coords[1];
+    this.leafletMap();
   }
 
   ionViewDidEnter() {
@@ -102,42 +125,7 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
         if (!this.infoCargada) {
           this.infoCargada = true;
           this.id_aux = Object.values(data.auxiliares);
-          this.db
-            .collection("conductor")
-            .doc(data.id_conductor)
-            .get()
-            .forEach((doc) => {
-              this.dataService.setDataConductor(doc.data() as Conductor);
-              this.db
-                .collection("persona")
-                .doc(this.dataService.getDataConductor().id_persona)
-                .get()
-                .forEach((doc) => {
-                  this.dataService.setDataConductorPersona(doc.data() as Persona);
-                })
-                .catch(() => this.avisarErrorCarga());
-            })
-            .catch(() => this.avisarErrorCarga());
-          for (let i = 0; i < this.id_aux.length; i++) {
-            this.db
-              .collection("auxiliar")
-              .doc(this.id_aux[i])
-              .get()
-              .forEach((doc) => {
-                if (doc.get("aux_estado") == "1") {
-                  this.dataService.setDataAuxiliar(doc.data() as Auxiliar);
-                  this.db
-                    .collection("persona")
-                    .doc(this.dataService.getDataAuxiliar().id_persona)
-                    .get()
-                    .forEach((doc) => {
-                      this.dataService.setDataAuxiliarPersona(doc.data() as Persona);
-                    })
-                    .catch(() => this.avisarErrorCarga());
-                }
-              })
-              .catch(() => this.avisarErrorCarga());
-          }
+          this.cargarInfoDeRuta(data.id_conductor);
         }
         if (!this.map) {
           this.leafletMap();
@@ -170,6 +158,47 @@ export class RastreoApoderadoPage implements OnInit, OnDestroy {
           );
         }
       });
+  }
+
+  /*
+   * Quien conduce y quien acompaña: se resuelve una sola vez por ruta.
+   *
+   * El auxiliar a bordo se elige ahora por orden de id y no por orden
+   * de llegada de las respuestas: antes cada consulta que encontraba un
+   * aux_estado 1 sobreescribia a la anterior, asi que con dos auxiliares
+   * marcados el nombre mostrado dependia de cual contestara ultimo.
+   *
+   * La comparacion con "1" se deja laxa a proposito: aux_estado esta
+   * guardado unas veces como numero y otras como texto (ver el modelo).
+   */
+  private async cargarInfoDeRuta(idConductor: string) {
+    const conductorDoc = await this.leer("conductor", idConductor);
+    if (conductorDoc) {
+      this.dataService.setDataConductor(conductorDoc.data() as Conductor);
+      const personaDoc = await this.leer(
+        "persona",
+        this.dataService.getDataConductor().id_persona
+      );
+      if (personaDoc) {
+        this.dataService.setDataConductorPersona(personaDoc.data() as Persona);
+      }
+    }
+
+    const auxDocs = await Promise.all(
+      this.id_aux.map((id) => this.leer("auxiliar", id))
+    );
+    const aBordo = auxDocs.find((doc) => doc && doc.get("aux_estado") == "1");
+    if (!aBordo) {
+      return;
+    }
+    this.dataService.setDataAuxiliar(aBordo.data() as Auxiliar);
+    const personaAux = await this.leer(
+      "persona",
+      this.dataService.getDataAuxiliar().id_persona
+    );
+    if (personaAux) {
+      this.dataService.setDataAuxiliarPersona(personaAux.data() as Persona);
+    }
   }
 
   private avisandoErrorCarga = false;
