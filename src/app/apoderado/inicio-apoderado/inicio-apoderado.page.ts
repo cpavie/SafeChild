@@ -9,6 +9,20 @@ import { EditAlumnoPage } from "../edit-alumno/edit-alumno.page";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { ALU_ESTADO, Apoderado, Furgon, Persona } from "src/app/models/safechild.models";
 
+// Una fila por alumno, ya resuelta: la tarjeta necesita el nombre
+// (coleccion persona), la patente (coleccion furgon) y si va en ruta
+// (alu_estado), datos que antes se pedian recien al pulsar "Rastrear".
+interface FilaAlumno {
+  id: string;
+  nombre: string;
+  patente: string;
+  enRuta: boolean;
+  // Se guarda aparte de enRuta porque no es su negacion: "no subio" y
+  // "todavia no sale" son los dos "sin ruta", y al apoderado le importa
+  // muchisimo la diferencia.
+  noAbordo: boolean;
+}
+
 @Component({
   selector: "app-inicio-apoderado",
   templateUrl: "./inicio-apoderado.page.html",
@@ -16,19 +30,7 @@ import { ALU_ESTADO, Apoderado, Furgon, Persona } from "src/app/models/safechild
 })
 export class InicioApoderadoPage implements OnInit {
   uid: string;
-  // Una fila por alumno, ya resuelta: la tarjeta necesita el nombre
-  // (coleccion persona), la patente (coleccion furgon) y si va en ruta
-  // (alu_estado), datos que antes se pedian recien al pulsar "Rastrear".
-  alumnos: Array<{
-    id: string;
-    nombre: string;
-    patente: string;
-    enRuta: boolean;
-    // Se guarda aparte de enRuta porque no es su negacion: "no subio"
-    // y "todavia no sale" son los dos "sin ruta", y al apoderado le
-    // importa muchisimo la diferencia.
-    noAbordo: boolean;
-  }> = [];
+  alumnos: FilaAlumno[] = [];
   // Evita que "No hay alumnos asociados a su cuenta" aparezca mientras
   // la primera lectura sigue en curso.
   cargando = true;
@@ -56,43 +58,72 @@ export class InicioApoderadoPage implements OnInit {
   }
 
   ngOnInit() {
+    // Ver inicio-conductor: al cerrar sesion authState emite null y
+    // `res.uid !== null` reventaba al leer .uid de null.
     this.AFA.authState.forEach((res) => {
-      if (res.uid !== null) {
+      if (res && res.uid) {
         this.uid = res.uid;
         this.getInfo();
       }
     });
   }
 
-  editAlumno(id_alum: string) {
-    if (id_alum == null) {
+  /*
+   * Lee un documento suelto.
+   *
+   * Concentra las dos precauciones que antes se repetian a mano en cada
+   * nivel de las cadenas anidadas, y que era justamente donde se
+   * colaban los errores:
+   *
+   *  - id vacio: doc(undefined) NO falla al construirse (Firestore lo
+   *    toma como "genera un id nuevo"), y recien el get() se rechaza
+   *    por reglas. Se corta antes para no disparar una lectura
+   *    condenada por cada campo que falte.
+   *  - error de lectura (permiso denegado, documento borrado): se avisa
+   *    una sola vez y se devuelve null, para que la pantalla no quede a
+   *    medio cargar en silencio.
+   */
+  private async leer(coleccion: string, id: string) {
+    if (!id) {
+      return null;
+    }
+    try {
+      return await this.db.collection(coleccion).doc(id).get().toPromise();
+    } catch {
+      this.avisarErrorCarga();
+      return null;
+    }
+  }
+
+  async editAlumno(id_alum: string) {
+    if (!id_alum) {
       this.toast("seleccione un alumno para editar");
-    } else
-      this.db
-        .collection("alumno")
-        .doc(id_alum)
-        .get()
-        .forEach((doc) => {
-          // doc.data() no trae el id del propio documento: se agrega
-          // aparte, porque edit-alumno.page.ts y otras pantallas lo
-          // necesitan para saber a que alumno/{id} escribir despues.
-          this.dataService.setDataAlumno({ ...(doc.data() as any), id_alumno: doc.id });
-          this.db
-            .collection("furgon")
-            .doc(this.dataService.getDataAlumno().id_furgon)
-            .get()
-            .forEach((doc) => {
-              this.dataService.setdataFurgon(doc.data() as Furgon);
-            });
-          this.db
-            .collection("persona")
-            .doc(this.dataService.getDataAlumno().id_persona)
-            .get()
-            .forEach((doc) => {
-              this.dataService.setDataAlumnoPersona(doc.data() as Persona);
-              this.goEdit();
-            });
-        });
+      return;
+    }
+    const alumnoDoc = await this.leer("alumno", id_alum);
+    if (!alumnoDoc) {
+      return;
+    }
+    // data() no trae el id del propio documento: se agrega aparte,
+    // porque edit-alumno.page.ts y otras pantallas lo necesitan para
+    // saber a que alumno/{id} escribir despues.
+    this.dataService.setDataAlumno({
+      ...(alumnoDoc.data() as any),
+      id_alumno: alumnoDoc.id,
+    });
+
+    const [furgonDoc, personaDoc] = await Promise.all([
+      this.leer("furgon", this.dataService.getDataAlumno().id_furgon),
+      this.leer("persona", this.dataService.getDataAlumno().id_persona),
+    ]);
+    if (furgonDoc) {
+      this.dataService.setdataFurgon(furgonDoc.data() as Furgon);
+    }
+    if (!personaDoc) {
+      return;
+    }
+    this.dataService.setDataAlumnoPersona(personaDoc.data() as Persona);
+    await this.goEdit();
   }
 
   async goEdit() {
@@ -110,104 +141,88 @@ export class InicioApoderadoPage implements OnInit {
     await modal.present();
   }
 
-  getInfo() {
+  /*
+   * Los zone.run() se mantienen pese al async/await: getInfo() puede
+   * arrancar desde authState, que emite FUERA de la zona de Angular, y
+   * Zone.js captura la zona al registrar el await, no al resolverse, de
+   * modo que las continuaciones tampoco quedan dentro. Sin esto los
+   * datos llegan correctos a memoria pero la pantalla no se repinta.
+   */
+  async getInfo() {
     this.cargando = true;
-    this.db
-      .collection("apoderado")
-      .doc(this.uid)
-      .get()
-      .forEach((doc) => {
-        const ids: string[] = Object.values(doc.get("id_alumnos") || {});
-        this.dataService.setDataApoderado(doc.data() as Apoderado);
-        this.db
-          .collection("persona")
-          .doc(doc.get("id_persona"))
-          .get()
-          .forEach((doc) => {
-            this.dataService.setDataApoderadoPersona(doc.data() as Persona);
-          })
-          .catch(() => this.avisarErrorCarga());
 
-        // Se crean las filas de una vez y luego cada consulta rellena la
-        // suya por indice: asi el orden de las tarjetas sigue el de
-        // id_alumnos y no el de llegada de las respuestas.
-        //
-        // authState puede emitir mas de una vez (refresco de token), y
-        // entonces `alumnos` se reemplaza mientras las consultas de la
-        // pasada anterior siguen en vuelo. Cada callback se queda con
-        // una referencia a SU array y comprueba que la fila siga siendo
-        // la del mismo alumno antes de escribirla; si no, ya es de otra
-        // pasada y se descarta.
-        const filas = ids.map((id) => ({
-          id,
-          nombre: "",
-          patente: "",
-          enRuta: false,
-          noAbordo: false,
-        }));
-        // Dentro de la zona: si el apoderado no tiene alumnos no va a
-        // correr ningun callback de fila despues, y sin esto el estado
-        // vacio no llegaba a pintarse al volver a la pestaña.
-        this.zone.run(() => {
-          this.alumnos = filas;
-          this.cargando = false;
-        });
+    const apoderadoDoc = await this.leer("apoderado", this.uid);
+    if (!apoderadoDoc) {
+      this.zone.run(() => (this.cargando = false));
+      return;
+    }
 
-        ids.forEach((id, i) => {
-          const fila = filas[i];
-          this.db
-            .collection("alumno")
-            .doc(id)
-            .get()
-            .forEach((alumnoDoc) => {
-              this.zone.run(() => {
-                const estado = alumnoDoc.get("alu_estado");
-                fila.enRuta = estado == ALU_ESTADO.ABORDO;
-                fila.noAbordo = estado == ALU_ESTADO.NO_ABORDO;
-              });
+    const ids: string[] = Object.values(apoderadoDoc.get("id_alumnos") || {});
+    this.dataService.setDataApoderado(apoderadoDoc.data() as Apoderado);
 
-              // doc(undefined) no falla al construirse: Firestore lo
-              // toma como "genera un id nuevo", y recien el get() se
-              // rechaza por reglas. Se corta antes para no disparar una
-              // lectura condenada por cada campo que falte.
-              const idPersona = alumnoDoc.get("id_persona");
-              if (idPersona) {
-                this.db
-                  .collection("persona")
-                  .doc(idPersona)
-                  .get()
-                  .forEach((personaDoc) => {
-                    this.zone.run(() => {
-                      fila.nombre =
-                        personaDoc.get("p_nombres") +
-                        " " +
-                        personaDoc.get("p_apellidos");
-                    });
-                  })
-                  .catch(() => this.avisarErrorCarga());
-              }
+    // El nombre del apoderado alimenta la cabecera y no lo necesita
+    // ninguna fila: se lanza sin esperarlo para no retrasar la lista.
+    this.leer("persona", apoderadoDoc.get("id_persona")).then((personaDoc) => {
+      if (personaDoc) {
+        this.zone.run(() =>
+          this.dataService.setDataApoderadoPersona(personaDoc.data() as Persona)
+        );
+      }
+    });
 
-              const idFurgon = alumnoDoc.get("id_furgon");
-              if (idFurgon) {
-                this.db
-                  .collection("furgon")
-                  .doc(idFurgon)
-                  .get()
-                  .forEach((furgonDoc) => {
-                    this.zone.run(() => {
-                      fila.patente = furgonDoc.get("fur_patente");
-                    });
-                  })
-                  .catch(() => this.avisarErrorCarga());
-              }
-            })
-            .catch(() => this.avisarErrorCarga());
-        });
-      })
-      .catch(() => {
-        this.zone.run(() => (this.cargando = false));
-        this.avisarErrorCarga();
-      });
+    // Se crean las filas de una vez y luego cada tarea rellena la suya:
+    // asi el orden de las tarjetas sigue el de id_alumnos y no el de
+    // llegada de las respuestas.
+    //
+    // authState puede emitir mas de una vez (refresco de token) y
+    // reemplazar `alumnos` mientras las consultas de la pasada anterior
+    // siguen en vuelo. Cada tarea se queda con SU fila por closure, asi
+    // que una pasada vieja no puede escribir sobre la nueva.
+    const filas: FilaAlumno[] = ids.map((id) => ({
+      id,
+      nombre: "",
+      patente: "",
+      enRuta: false,
+      noAbordo: false,
+    }));
+    // Dentro de la zona: si el apoderado no tiene alumnos no va a correr
+    // ninguna tarea de fila despues, y sin esto el estado vacio no
+    // llegaba a pintarse al volver a la pestaña.
+    this.zone.run(() => {
+      this.alumnos = filas;
+      this.cargando = false;
+    });
+
+    // Promise.all y no un for...of con await: las filas se resuelven en
+    // paralelo, como hacian los callbacks. En serie serian N viajes de
+    // ida y vuelta encadenados.
+    await Promise.all(filas.map((fila) => this.completarFila(fila)));
+  }
+
+  private async completarFila(fila: FilaAlumno) {
+    const alumnoDoc = await this.leer("alumno", fila.id);
+    if (!alumnoDoc) {
+      return;
+    }
+    const estado = alumnoDoc.get("alu_estado");
+    this.zone.run(() => {
+      fila.enRuta = estado == ALU_ESTADO.ABORDO;
+      fila.noAbordo = estado == ALU_ESTADO.NO_ABORDO;
+    });
+
+    const [personaDoc, furgonDoc] = await Promise.all([
+      this.leer("persona", alumnoDoc.get("id_persona")),
+      this.leer("furgon", alumnoDoc.get("id_furgon")),
+    ]);
+    this.zone.run(() => {
+      if (personaDoc) {
+        fila.nombre =
+          personaDoc.get("p_nombres") + " " + personaDoc.get("p_apellidos");
+      }
+      if (furgonDoc) {
+        fila.patente = furgonDoc.get("fur_patente");
+      }
+    });
   }
 
   private avisandoErrorCarga = false;
@@ -234,49 +249,53 @@ export class InicioApoderadoPage implements OnInit {
     return "Buenas noches";
   }
 
-  getInfoAlumno(id_alum: string) {
-    if (id_alum == null) {
+  async getInfoAlumno(id_alum: string) {
+    if (!id_alum) {
       this.toast("seleccione un alumno para rastrear");
-    } else
-      this.db
-        .collection("alumno")
-        .doc(id_alum)
-        .get()
-        .forEach((doc) => {
-          if (doc.get("alu_estado") == ALU_ESTADO.ABORDO) {
-            // doc.data() no trae el id del propio documento: sin esto,
-            // getDataAlumno().id_alumno queda undefined, lo que hace
-            // que RastreoApoderadoGuard bloquee SIEMPRE el acceso a
-            // rastreo-apoderado (exige id_alumno truthy) y que la
-            // navegacion mande a ".../rastreo-apoderado/undefined".
-            this.dataService.setDataAlumno({ ...(doc.data() as any), id_alumno: doc.id });
-            this.db
-              .collection("furgon")
-              .doc(this.dataService.getDataAlumno().id_furgon)
-              .get()
-              .forEach((doc) => {
-                this.dataService.setdataFurgon(doc.data() as Furgon);
-              });
-            this.db
-              .collection("persona")
-              .doc(this.dataService.getDataAlumno().id_persona)
-              .get()
-              .forEach((doc) => {
-                this.dataService.setDataAlumnoPersona(doc.data() as Persona);
-                this.router.navigate([
-                  "/tabs-apoderado/rastreo-apoderado",
-                  this.dataService.getDataAlumno().id_alumno,
-                ]);
-              });
-          } else if (doc.get("alu_estado") == ALU_ESTADO.NO_ABORDO) {
-            // Sin este caso el mensaje era "no se encuentra en ruta",
-            // que suena a que todavia no sale y no a que el furgon ya
-            // paso sin el.
-            this.toast("Su alumno no abordó el furgón en esta ruta");
-          } else {
-            this.toast("el alumno seleccionado no se encuentra en ruta");
-          }
-        });
+      return;
+    }
+    const alumnoDoc = await this.leer("alumno", id_alum);
+    if (!alumnoDoc) {
+      return;
+    }
+
+    const estado = alumnoDoc.get("alu_estado");
+    if (estado == ALU_ESTADO.NO_ABORDO) {
+      // Sin este caso el mensaje era "no se encuentra en ruta", que
+      // suena a que todavia no sale y no a que el furgon ya paso sin el.
+      this.toast("Su alumno no abordó el furgón en esta ruta");
+      return;
+    }
+    if (estado != ALU_ESTADO.ABORDO) {
+      this.toast("el alumno seleccionado no se encuentra en ruta");
+      return;
+    }
+
+    // data() no trae el id del propio documento: sin esto,
+    // getDataAlumno().id_alumno queda undefined, lo que hace que
+    // RastreoApoderadoGuard bloquee SIEMPRE el acceso a
+    // rastreo-apoderado (exige id_alumno truthy) y que la navegacion
+    // mande a ".../rastreo-apoderado/undefined".
+    this.dataService.setDataAlumno({
+      ...(alumnoDoc.data() as any),
+      id_alumno: alumnoDoc.id,
+    });
+
+    const [furgonDoc, personaDoc] = await Promise.all([
+      this.leer("furgon", this.dataService.getDataAlumno().id_furgon),
+      this.leer("persona", this.dataService.getDataAlumno().id_persona),
+    ]);
+    if (furgonDoc) {
+      this.dataService.setdataFurgon(furgonDoc.data() as Furgon);
+    }
+    if (!personaDoc) {
+      return;
+    }
+    this.dataService.setDataAlumnoPersona(personaDoc.data() as Persona);
+    this.router.navigate([
+      "/tabs-apoderado/rastreo-apoderado",
+      this.dataService.getDataAlumno().id_alumno,
+    ]);
   }
 
   async logout() {

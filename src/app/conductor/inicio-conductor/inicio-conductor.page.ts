@@ -7,6 +7,26 @@ import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { DatosService } from "src/app/servicios/datos.service";
 import { ALU_ESTADO, Auxiliar, Conductor, Furgon, Persona } from "src/app/models/safechild.models";
 
+// La seleccion vive en la propia fila (`on`) en vez de en tres arrays
+// paralelos (ids / nombres / checkboxes) que antes podian
+// desincronizarse entre si.
+interface FilaRoster {
+  id: string;
+  nombre: string;
+  direccion: string;
+  on: boolean;
+}
+
+// nombres y apellidos se guardan por separado, no concatenados: el
+// rastreo necesita la Persona con sus dos campos, y volver a partir un
+// "nombre completo" por el primer espacio rompe cualquier nombre
+// compuesto ("Ana María Soto Rojas" daria p_nombres "Ana").
+interface FilaAuxiliar {
+  id: string;
+  nombres: string;
+  apellidos: string;
+}
+
 @Component({
   selector: "app-inicio-conductor",
   templateUrl: "./inicio-conductor.page.html",
@@ -14,20 +34,8 @@ import { ALU_ESTADO, Auxiliar, Conductor, Furgon, Persona } from "src/app/models
 })
 export class InicioConductorPage implements OnInit {
   uid: string;
-  // La seleccion vive en la propia fila (`on`) en vez de en tres arrays
-  // paralelos (ids / nombres / checkboxes) que antes podian
-  // desincronizarse entre si.
-  roster: Array<{
-    id: string;
-    nombre: string;
-    direccion: string;
-    on: boolean;
-  }> = [];
-  // nombres y apellidos se guardan por separado, no concatenados: el
-  // rastreo necesita la Persona con sus dos campos, y volver a partir
-  // un "nombre completo" por el primer espacio rompe cualquier nombre
-  // compuesto ("Ana María Soto Rojas" daria p_nombres "Ana").
-  auxiliares: Array<{ id: string; nombres: string; apellidos: string }> = [];
+  roster: FilaRoster[] = [];
+  auxiliares: FilaAuxiliar[] = [];
   bind: string;
   // Distingue "todavia no se cuantos alumnos hay" de "no hay ninguno":
   // sin esto la pantalla mostraba una lista en blanco durante la carga,
@@ -57,8 +65,11 @@ export class InicioConductorPage implements OnInit {
   }
 
   ngOnInit() {
+    // `res && res.uid` y no `res.uid !== null`: al cerrar sesion
+    // authState emite null, y leer .uid de null lanzaba una excepcion
+    // que quedaba como promesa rechazada suelta en cada logout.
     this.AFA.authState.forEach((res) => {
-      if (res.uid !== null) {
+      if (res && res.uid) {
         this.uid = res.uid;
         this.getInfo();
       }
@@ -142,126 +153,133 @@ export class InicioConductorPage implements OnInit {
   }
 
   /*
-   * Las escrituras que rellenan roster/auxiliares van dentro de
-   * zone.run(): al volver a esta tab (ionViewWillEnter) el componente ya
-   * existe, y las respuestas de estas lecturas anidadas llegan fuera de
-   * un ciclo de Angular, asi que las filas quedaban con los datos
-   * correctos en memoria pero en blanco en pantalla. En la primera
-   * carga no se notaba porque el arranque dispara deteccion igual.
+   * Lee un documento suelto. Concentra las dos precauciones que antes
+   * se repetian a mano en cada nivel de la piramide, que era donde se
+   * colaban los errores:
+   *
+   *  - id vacio: doc(undefined) NO falla al construirse (Firestore lo
+   *    toma como "genera un id nuevo") y recien el get() se rechaza por
+   *    reglas, asi que se corta antes.
+   *  - error de lectura: se avisa una sola vez y se devuelve null, en
+   *    vez de dejar la pantalla a medio cargar en silencio.
    */
-  getInfo() {
+  private async leer(coleccion: string, id: string) {
+    if (!id) {
+      return null;
+    }
+    try {
+      return await this.db.collection(coleccion).doc(id).get().toPromise();
+    } catch {
+      this.avisarErrorCarga();
+      return null;
+    }
+  }
+
+  /*
+   * Las escrituras que rellenan roster/auxiliares van dentro de
+   * zone.run() aun con async/await: al volver a esta tab
+   * (ionViewWillEnter) el componente ya existe, y estas lecturas
+   * resuelven fuera de un ciclo de Angular (Zone.js captura la zona al
+   * registrar el await, no al resolverse), asi que las filas quedaban
+   * con los datos correctos en memoria pero en blanco en pantalla. En
+   * la primera carga no se notaba porque el arranque dispara deteccion
+   * igual.
+   */
+  async getInfo() {
     this.cargando = true;
-    this.db
-      .collection("conductor")
-      .doc(this.uid)
-      .get()
-      .forEach((doc) => {
-        this.dataService.setDataConductor(doc.data() as Conductor);
-        this.db
-          .collection("persona")
-          .doc(this.dataService.getDataConductor().id_persona)
-          .get()
-          .forEach((doc) => {
-            this.dataService.setDataConductorPersona(doc.data() as Persona);
-            this.db
-              .collection("furgon")
-              .doc(this.dataService.getDataConductor().id_furgon)
-              .get()
-              .forEach((doc) => {
-                this.dataService.setdataFurgon(doc.data() as Furgon);
 
-                const idsAuxiliares: string[] = Object.values(
-                  doc.get("auxiliares") || {}
-                );
-                // Cada callback se queda con SU fila (no con el indice
-                // dentro del array actual): authState puede emitir de
-                // nuevo y reemplazar el array mientras estas consultas
-                // siguen en vuelo, y escribir por indice reventaria con
-                // "cannot set property of undefined".
-                const filasAux = idsAuxiliares.map((id) => ({
-                  id,
-                  nombres: "",
-                  apellidos: "",
-                }));
-                idsAuxiliares.forEach((id, i) => {
-                  const fila = filasAux[i];
-                  this.db
-                    .collection("auxiliar")
-                    .doc(id)
-                    .get()
-                    .forEach((auxDoc) => {
-                      const idPersona = auxDoc.get("id_persona");
-                      if (!idPersona) {
-                        return;
-                      }
-                      this.db
-                        .collection("persona")
-                        .doc(idPersona)
-                        .get()
-                        .forEach((personaDoc) => {
-                          this.zone.run(() => {
-                            fila.nombres = personaDoc.get("p_nombres");
-                            fila.apellidos = personaDoc.get("p_apellidos");
-                          });
-                        })
-                        .catch(() => this.avisarErrorCarga());
-                    })
-                    .catch(() => this.avisarErrorCarga());
-                });
+    const conductorDoc = await this.leer("conductor", this.uid);
+    if (!conductorDoc) {
+      return;
+    }
+    this.dataService.setDataConductor(conductorDoc.data() as Conductor);
+    const datosConductor = this.dataService.getDataConductor();
 
-                const idsAlumnos: string[] = Object.values(
-                  doc.get("alumnos") || {}
-                );
-                const filasRoster = idsAlumnos.map((id) => ({
-                  id,
-                  nombre: "",
-                  direccion: "",
-                  on: false,
-                }));
-                // Las dos listas y el flag se publican juntos y dentro
-                // de la zona: si el furgon no tiene alumnos, ningun
-                // callback de fila va a correr despues, asi que esta es
-                // la unica oportunidad de disparar deteccion de cambios
-                // y mostrar el estado vacio.
-                this.zone.run(() => {
-                  this.auxiliares = filasAux;
-                  this.roster = filasRoster;
-                  this.cargando = false;
-                });
-                idsAlumnos.forEach((id, i) => {
-                  const fila = filasRoster[i];
-                  this.db
-                    .collection("alumno")
-                    .doc(id)
-                    .get()
-                    .forEach((alumnoDoc) => {
-                      const idPersona = alumnoDoc.get("id_persona");
-                      if (!idPersona) {
-                        return;
-                      }
-                      this.db
-                        .collection("persona")
-                        .doc(idPersona)
-                        .get()
-                        .forEach((personaDoc) => {
-                          this.zone.run(() => {
-                            fila.nombre =
-                              personaDoc.get("p_nombres") +
-                              " " +
-                              personaDoc.get("p_apellidos");
-                            fila.direccion = personaDoc.get("p_direccion");
-                          });
-                        })
-                        .catch(() => this.avisarErrorCarga());
-                    })
-                    .catch(() => this.avisarErrorCarga());
-                });
-              })
-              .catch(() => this.avisarErrorCarga());
-          })
-          .catch(() => this.avisarErrorCarga());
-      })
-      .catch(() => this.avisarErrorCarga());
+    // La persona del conductor y el furgon cuelgan los dos del mismo
+    // documento, asi que se piden a la vez. Antes el furgon esperaba a
+    // que llegara la persona sin necesitarla para nada.
+    const [personaDoc, furgonDoc] = await Promise.all([
+      this.leer("persona", datosConductor.id_persona),
+      this.leer("furgon", datosConductor.id_furgon),
+    ]);
+    if (personaDoc) {
+      this.dataService.setDataConductorPersona(personaDoc.data() as Persona);
+    }
+    if (!furgonDoc) {
+      this.zone.run(() => (this.cargando = false));
+      return;
+    }
+    this.dataService.setdataFurgon(furgonDoc.data() as Furgon);
+
+    // Cada tarea se queda con SU fila por closure (no con el indice
+    // dentro del array actual): authState puede emitir de nuevo y
+    // reemplazar el array mientras estas consultas siguen en vuelo, y
+    // escribir por indice reventaria con "cannot set property of
+    // undefined".
+    const idsAuxiliares: string[] = Object.values(
+      furgonDoc.get("auxiliares") || {}
+    );
+    const filasAux: FilaAuxiliar[] = idsAuxiliares.map((id) => ({
+      id,
+      nombres: "",
+      apellidos: "",
+    }));
+
+    const idsAlumnos: string[] = Object.values(furgonDoc.get("alumnos") || {});
+    const filasRoster: FilaRoster[] = idsAlumnos.map((id) => ({
+      id,
+      nombre: "",
+      direccion: "",
+      on: false,
+    }));
+
+    // Las dos listas y el flag se publican juntos y dentro de la zona:
+    // si el furgon no tiene alumnos, ninguna tarea de fila va a correr
+    // despues, asi que esta es la unica oportunidad de disparar
+    // deteccion de cambios y mostrar el estado vacio.
+    this.zone.run(() => {
+      this.auxiliares = filasAux;
+      this.roster = filasRoster;
+      this.cargando = false;
+    });
+
+    // En paralelo, como hacian los callbacks: en serie serian dos
+    // viajes de ida y vuelta por cada alumno y por cada auxiliar.
+    await Promise.all([
+      ...filasAux.map((fila) => this.completarAuxiliar(fila)),
+      ...filasRoster.map((fila) => this.completarAlumno(fila)),
+    ]);
+  }
+
+  private async completarAuxiliar(fila: FilaAuxiliar) {
+    const auxDoc = await this.leer("auxiliar", fila.id);
+    if (!auxDoc) {
+      return;
+    }
+    const personaDoc = await this.leer("persona", auxDoc.get("id_persona"));
+    if (!personaDoc) {
+      return;
+    }
+    this.zone.run(() => {
+      fila.nombres = personaDoc.get("p_nombres");
+      fila.apellidos = personaDoc.get("p_apellidos");
+    });
+  }
+
+  private async completarAlumno(fila: FilaRoster) {
+    const alumnoDoc = await this.leer("alumno", fila.id);
+    if (!alumnoDoc) {
+      return;
+    }
+    const personaDoc = await this.leer("persona", alumnoDoc.get("id_persona"));
+    if (!personaDoc) {
+      return;
+    }
+    this.zone.run(() => {
+      fila.nombre =
+        personaDoc.get("p_nombres") + " " + personaDoc.get("p_apellidos");
+      fila.direccion = personaDoc.get("p_direccion");
+    });
   }
   comenzarRuta() {
     const seleccionados = this.seleccionados;
@@ -287,35 +305,45 @@ export class InicioConductorPage implements OnInit {
       });
     }
 
-    this.db
-      .collection("auxiliar")
-      .doc(this.bind)
-      .get()
-      .forEach((doc) => {
+    // Deliberadamente sin await: la navegacion de mas abajo no depende
+    // de esta lectura (para eso esta el chip de arriba); solo deja el
+    // documento del auxiliar disponible para las pantallas siguientes.
+    this.leer("auxiliar", this.bind).then((doc) => {
+      if (doc) {
         this.dataService.setDataAuxiliar(doc.data() as Auxiliar);
-      })
-      .catch(() => this.avisarErrorCarga());
-    this.db.collection("auxiliar").doc(this.bind).update({
-      aux_estado: 1,
+      }
     });
+
     this.dataService.setIdAuxiliar(this.bind);
     this.dataService.ids_alumnos = seleccionados.map((a) => a.id);
     this.dataService.nombres_alumnos = seleccionados.map((a) => a.nombre);
+
     // Se marca alu_estado solo para los alumnos realmente
     // seleccionados, no por indice de checkbox tocado (el array de
     // checkboxes era sparse y no reflejaba el estado real).
-    for (const alumno of seleccionados) {
-      this.db.collection("alumno").doc(alumno.id).update({
-        alu_estado: ALU_ESTADO.ABORDO,
-      });
-    }
-    // El id del documento conductor/{uid} ES el uid de Firebase
-    // Auth (ver firestore.rules), no un campo id_conductor dentro
-    // del doc (ese campo no existe, doc(undefined) fallaba con
+    //
+    // El id del documento conductor/{uid} ES el uid de Firebase Auth
+    // (ver firestore.rules), no un campo id_conductor dentro del doc
+    // (ese campo no existe, doc(undefined) fallaba con
     // permission-denied en silencio).
-    this.db.collection("conductor").doc(this.uid).update({
-      con_estado: 1,
-    });
+    //
+    // Las escrituras no se esperaban ni tenian .catch(), asi que un
+    // fallo (sin conexion, reglas) quedaba como una promesa rechazada
+    // suelta en la consola y el conductor arrancaba la ruta creyendo
+    // que habia quedado registrada.
+    const escrituras = [
+      this.db.collection("auxiliar").doc(this.bind).update({ aux_estado: 1 }),
+      this.db.collection("conductor").doc(this.uid).update({ con_estado: 1 }),
+      ...seleccionados.map((alumno) =>
+        this.db
+          .collection("alumno")
+          .doc(alumno.id)
+          .update({ alu_estado: ALU_ESTADO.ABORDO })
+      ),
+    ];
+    Promise.all(escrituras).catch(() =>
+      this.toast("No se pudo registrar el inicio de la ruta.", "danger")
+    );
     this.router.navigate(["/tabs-conductor/rastreo-conductor"]);
   }
 
