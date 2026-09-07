@@ -25,6 +25,11 @@ npm-debug.log*
 /.vscode
 /coverage
 /dist
+# Grafo de conocimiento generado por graphify: salida derivada del
+# propio codigo, se regenera con /graphify. Ademas .graphify_root y
+# .graphify_python guardan rutas absolutas de la maquina que lo genero,
+# asi que no le sirven a nadie mas.
+/graphify-out
 /node_modules
 /platforms
 /plugins
