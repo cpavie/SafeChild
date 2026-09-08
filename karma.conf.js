@@ -26,6 +26,15 @@ module.exports = function (config) {
     logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['Chrome'],
+    // Launcher propio para CI: en un runner sin escritorio Chrome
+    // necesita --no-sandbox, y el reporter kjhtml no sirve de nada
+    // porque nadie va a abrir el navegador.
+    customLaunchers: {
+      ChromeHeadlessCI: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+      }
+    },
     singleRun: false
   });
 };

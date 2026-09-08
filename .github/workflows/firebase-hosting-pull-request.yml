@@ -14,6 +14,10 @@
 # New repository secret, con el nombre de abajo y el JSON de una cuenta
 # de servicio con rol "Firebase Hosting Admin".
 #
+# Las pruebas unitarias si corren (ver `npm run test:ci`): son las que
+# sostienen la migracion de Angular, porque comprueban que cada pagina
+# se sigue instanciando al subir de major.
+#
 # El lint NO corre aqui a proposito: hoy hay 512 errores preexistentes
 # (411 de ellos por comillas dobles, que es el estilo real del codigo),
 # asi que activarlo dejaria el check en rojo por defecto, que es
@@ -40,6 +44,9 @@ jobs:
 
       - name: Instalar dependencias
         run: npm ci
+
+      - name: Pruebas unitarias
+        run: npm run test:ci
 
       - name: Compilar en modo produccion
         run: npx ng build --configuration production

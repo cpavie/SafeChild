@@ -1,4 +1,8 @@
 import { TestBed } from '@angular/core/testing';
+import { IonicModule } from '@ionic/angular';
+import { RouterTestingModule } from '@angular/router/testing';
+
+import { proveedoresDePrueba } from '../../testing/dobles-firebase';
 
 import { AuthService } from './auth.service';
 
@@ -6,7 +10,10 @@ describe('AuthService', () => {
   let service: AuthService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      imports: [IonicModule.forRoot(), RouterTestingModule],
+      providers: proveedoresDePrueba,
+    });
     service = TestBed.inject(AuthService);
   });
 
