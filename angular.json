@@ -76,8 +76,18 @@
             },
             "ci": {
               "progress": false
+            },
+            "development": {
+              "optimization": false,
+              "buildOptimizer": false,
+              "aot": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "vendorChunk": true
             }
-          }
+          },
+          "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
@@ -90,8 +100,12 @@
             },
             "ci": {
               "progress": false
+            },
+            "development": {
+              "browserTarget": "app:build:development"
             }
-          }
+          },
+          "defaultConfiguration": "development"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
@@ -136,7 +150,9 @@
               "tsconfig.spec.json",
               "e2e/tsconfig.json"
             ],
-            "exclude": ["**/node_modules/**"]
+            "exclude": [
+              "**/node_modules/**"
+            ]
           }
         },
         "e2e": {
@@ -192,6 +208,4 @@
       "styleext": "scss"
     }
   }
-  
 }
-
