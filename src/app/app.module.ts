@@ -9,12 +9,12 @@ import { StatusBar } from '@ionic-native/status-bar/ngx';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 
-import { AngularFireModule } from "@angular/fire";
+import { AngularFireModule } from "@angular/fire/compat";
 import { environment } from "../environments/environment";
-import { AngularFirestoreModule } from "@angular/fire/firestore";
+import { AngularFirestoreModule } from "@angular/fire/compat/firestore";
 import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
-import { AngularFireAuthModule } from "@angular/fire/auth";
+import { AngularFireAuthModule } from "@angular/fire/compat/auth";
 
 @NgModule({
   declarations: [AppComponent],

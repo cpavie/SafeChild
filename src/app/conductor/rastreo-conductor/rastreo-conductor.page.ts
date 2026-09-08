@@ -2,14 +2,14 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import * as Leaflet from "leaflet";
 import { Geolocation, Geoposition } from "@ionic-native/geolocation/ngx";
 import { DatosService } from "src/app/servicios/datos.service";
-import { AngularFirestore } from "@angular/fire/firestore";
+import { AngularFirestore } from "@angular/fire/compat/firestore";
 import { Router } from "@angular/router";
 import {
   AlertController,
   ModalController,
   ToastController,
 } from "@ionic/angular";
-import { AngularFireAuth } from "@angular/fire/auth";
+import { AngularFireAuth } from "@angular/fire/compat/auth";
 import { Subscription } from "rxjs";
 import { auditTime, filter } from "rxjs/operators";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
