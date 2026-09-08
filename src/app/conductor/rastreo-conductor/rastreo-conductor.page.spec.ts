@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
 
 import { RastreoConductorPage } from './rastreo-conductor.page';
@@ -7,7 +7,7 @@ describe('RastreoConductorPage', () => {
   let component: RastreoConductorPage;
   let fixture: ComponentFixture<RastreoConductorPage>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ RastreoConductorPage ],
       imports: [IonicModule.forRoot()]
