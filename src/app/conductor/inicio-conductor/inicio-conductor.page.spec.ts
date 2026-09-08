@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
+import { RouterTestingModule } from '@angular/router/testing';
+
+import { proveedoresDePrueba } from '../../../testing/dobles-firebase';
 
 import { InicioConductorPage } from './inicio-conductor.page';
 
@@ -10,7 +13,8 @@ describe('InicioConductorPage', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ InicioConductorPage ],
-      imports: [IonicModule.forRoot()]
+      imports: [IonicModule.forRoot(), RouterTestingModule],
+      providers: proveedoresDePrueba
     }).compileComponents();
 
     fixture = TestBed.createComponent(InicioConductorPage);
