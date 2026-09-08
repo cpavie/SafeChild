@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import * as Leaflet from "leaflet";
 import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { ActivatedRoute, Router } from "@angular/router";
-import { AngularFirestore } from "@angular/fire/firestore";
+import { AngularFirestore } from "@angular/fire/compat/firestore";
 import { DatosService } from "../../servicios/datos.service";
 import {
   AlertController,
@@ -13,7 +13,7 @@ import { InfoConductorPage } from "../info-conductor/info-conductor.page";
 import { InfoFurgonPage } from "../info-furgon/info-furgon.page";
 import { InfoAuxiliarPage } from "../info-auxiliar/info-auxiliar.page";
 import { Subscription } from "rxjs";
-import { AngularFireAuth } from "@angular/fire/auth";
+import { AngularFireAuth } from "@angular/fire/compat/auth";
 import { AyudaPage } from "src/app/ayuda/ayuda.page";
 import { ALU_ESTADO, Auxiliar, Conductor, Persona } from "src/app/models/safechild.models";
 

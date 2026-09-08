@@ -3,10 +3,10 @@ import {
 } from '@angular/core';
 import {
   AngularFireAuth
-} from "@angular/fire/auth";
+} from "@angular/fire/compat/auth";
 import {
   AngularFirestore
-} from "@angular/fire/firestore";
+} from "@angular/fire/compat/firestore";
 import {
   Router
 } from "@angular/router";

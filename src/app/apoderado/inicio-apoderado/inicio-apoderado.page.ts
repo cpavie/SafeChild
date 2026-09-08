@@ -1,7 +1,7 @@
 import { Component, NgZone, OnInit } from "@angular/core";
-import { AngularFireAuth } from "@angular/fire/auth";
+import { AngularFireAuth } from "@angular/fire/compat/auth";
 import { Router } from "@angular/router";
-import { AngularFirestore } from "@angular/fire/firestore";
+import { AngularFirestore } from "@angular/fire/compat/firestore";
 
 import { DatosService } from "../../servicios/datos.service";
 import { AlertController, ModalController, ToastController } from "@ionic/angular";

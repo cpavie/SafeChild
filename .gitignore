@@ -34,3 +34,6 @@ npm-debug.log*
 /platforms
 /plugins
 /www
+
+# Cache de compilacion que introduce Angular 13
+/.angular

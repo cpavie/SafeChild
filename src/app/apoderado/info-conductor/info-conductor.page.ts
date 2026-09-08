@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { ModalController } from "@ionic/angular";
 import { DatosService } from "src/app/servicios/datos.service";
-import { AngularFirestore } from "@angular/fire/firestore";
+import { AngularFirestore } from "@angular/fire/compat/firestore";
 
 @Component({
   selector: "app-info-conductor",
