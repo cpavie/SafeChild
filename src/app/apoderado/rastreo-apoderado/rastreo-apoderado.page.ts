@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import * as Leaflet from "leaflet";
-import { Geolocation } from "@ionic-native/geolocation/ngx";
+import { Geolocation } from "@awesome-cordova-plugins/geolocation/ngx";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AngularFirestore } from "@angular/fire/compat/firestore";
 import { DatosService } from "../../servicios/datos.service";
