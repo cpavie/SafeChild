@@ -15,7 +15,7 @@
 import { Provider } from "@angular/core";
 import { AngularFirestore } from "@angular/fire/compat/firestore";
 import { AngularFireAuth } from "@angular/fire/compat/auth";
-import { Geolocation } from "@ionic-native/geolocation/ngx";
+import { Geolocation } from "@awesome-cordova-plugins/geolocation/ngx";
 import { of } from "rxjs";
 
 /** Documento vacio pero con la forma que espera el codigo. */
