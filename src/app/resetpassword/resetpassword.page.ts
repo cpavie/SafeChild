@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/compat/auth";
 import { ModalController, ToastController } from "@ionic/angular";
 
@@ -7,7 +7,7 @@ import { ModalController, ToastController } from "@ionic/angular";
   templateUrl: "./resetpassword.page.html",
   styleUrls: ["./resetpassword.page.scss"],
 })
-export class ResetpasswordPage implements OnInit {
+export class ResetpasswordPage {
   correo: string;
 
   constructor(
@@ -48,5 +48,4 @@ export class ResetpasswordPage implements OnInit {
       });
   }
 
-  ngOnInit() {}
 }

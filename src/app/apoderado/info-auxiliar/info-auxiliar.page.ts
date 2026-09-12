@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { ModalController } from "@ionic/angular";
 import { DatosService } from "src/app/servicios/datos.service";
 
@@ -7,7 +7,7 @@ import { DatosService } from "src/app/servicios/datos.service";
   templateUrl: "./info-auxiliar.page.html",
   styleUrls: ["./info-auxiliar.page.scss"],
 })
-export class InfoAuxiliarPage implements OnInit {
+export class InfoAuxiliarPage {
   @Input() dataAux;
   @Input() dataAuxPersona;
   constructor(
@@ -15,7 +15,6 @@ export class InfoAuxiliarPage implements OnInit {
     public modalCtrl: ModalController
   ) {}
 
-  ngOnInit() {}
 
   // Ver info-conductor.page.ts: la pestaña pedida se resuelve en
   // rastreo-apoderado, que es quien tiene los datos de las tres.

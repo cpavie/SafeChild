@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component, OnDestroy } from "@angular/core";
 import * as Leaflet from "leaflet";
 import { Geolocation, Geoposition } from "@awesome-cordova-plugins/geolocation/ngx";
 import { DatosService } from "src/app/servicios/datos.service";
@@ -20,7 +20,7 @@ import { ALU_ESTADO } from "src/app/models/safechild.models";
   templateUrl: "./rastreo-conductor.page.html",
   styleUrls: ["./rastreo-conductor.page.scss"],
 })
-export class RastreoConductorPage implements OnInit, OnDestroy {
+export class RastreoConductorPage implements OnDestroy {
   uid: string;
   map: Leaflet.Map;
   lat: number;
@@ -73,7 +73,6 @@ export class RastreoConductorPage implements OnInit, OnDestroy {
     }
   }
 
-  ngOnInit() {}
 
   private iniciarSeguimiento() {
     this.seguimientoActivo = true;

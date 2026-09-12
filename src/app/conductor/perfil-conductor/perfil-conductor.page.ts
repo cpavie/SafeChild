@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from "@angular/core";
+import { Component, OnDestroy } from "@angular/core";
 import { AngularFireAuth } from "@angular/fire/compat/auth";
 import { AngularFirestore } from "@angular/fire/compat/firestore";
 import { Router } from "@angular/router";
@@ -17,7 +17,7 @@ import { Conductor, Furgon, Persona } from "src/app/models/safechild.models";
   templateUrl: "./perfil-conductor.page.html",
   styleUrls: ["./perfil-conductor.page.scss"],
 })
-export class PerfilConductorPage implements OnInit, OnDestroy {
+export class PerfilConductorPage implements OnDestroy {
   constructor(
     public dataService: DatosService,
     public alertController: AlertController,
@@ -36,7 +36,6 @@ export class PerfilConductorPage implements OnInit, OnDestroy {
   guardado = false;
   private guardadoTimer: any;
 
-  ngOnInit() {}
 
   // Se recarga desde Firestore (no solo desde el servicio en memoria)
   // porque un F5 en esta pagina deja dataService vacio: guardar en

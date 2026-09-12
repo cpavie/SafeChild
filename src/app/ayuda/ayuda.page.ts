@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component } from "@angular/core";
 import { ModalController } from "@ionic/angular";
 
 @Component({
@@ -6,10 +6,9 @@ import { ModalController } from "@ionic/angular";
   templateUrl: "./ayuda.page.html",
   styleUrls: ["./ayuda.page.scss"],
 })
-export class AyudaPage implements OnInit {
+export class AyudaPage {
   constructor(public modalController: ModalController) {}
 
-  ngOnInit() {}
 
   onClick() {
     this.modalController.dismiss();
