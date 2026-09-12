@@ -18,10 +18,9 @@
 # sostienen la migracion de Angular, porque comprueban que cada pagina
 # se sigue instanciando al subir de major.
 #
-# El lint NO corre aqui a proposito: hoy hay 512 errores preexistentes
-# (411 de ellos por comillas dobles, que es el estilo real del codigo),
-# asi que activarlo dejaria el check en rojo por defecto, que es
-# justamente el problema que este cambio arregla. Ver el punch list.
+# El lint SI corre: tslint se retiro en Angular 13 y el proyecto quedo
+# sin linter, asi que se monto @angular-eslint. La regla del sufijo de
+# clase acepta "Page" porque asi nombra Ionic sus paginas.
 
 name: CI y preview de Firebase Hosting
 'on': pull_request
@@ -44,6 +43,9 @@ jobs:
 
       - name: Instalar dependencias
         run: npm ci
+
+      - name: Lint
+        run: npm run lint
 
       - name: Pruebas unitarias
         run: npm run test:ci

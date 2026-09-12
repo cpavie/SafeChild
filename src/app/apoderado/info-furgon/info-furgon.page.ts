@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { ModalController } from "@ionic/angular";
 import { DatosService } from "src/app/servicios/datos.service";
 
@@ -7,14 +7,13 @@ import { DatosService } from "src/app/servicios/datos.service";
   templateUrl: "./info-furgon.page.html",
   styleUrls: ["./info-furgon.page.scss"],
 })
-export class InfoFurgonPage implements OnInit {
+export class InfoFurgonPage {
   @Input() dataFurgon;
   constructor(
     private modalCtrl: ModalController,
     public dataService: DatosService
   ) {}
 
-  ngOnInit() {}
 
   // Ver info-conductor.page.ts: la pestaña pedida se resuelve en
   // rastreo-apoderado, que es quien tiene los datos de las tres.
