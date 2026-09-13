@@ -37,3 +37,6 @@ npm-debug.log*
 
 # Cache de compilacion que introduce Angular 13
 /.angular
+
+# Ficheros de IDE del proyecto nativo, que Capacitor regenera
+/android/.idea

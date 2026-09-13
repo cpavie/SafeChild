@@ -2,32 +2,24 @@ import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { TestBed, waitForAsync } from '@angular/core/testing';
 
 import { Platform } from '@ionic/angular';
-import { SplashScreen } from '@awesome-cordova-plugins/splash-screen/ngx';
-import { StatusBar } from '@awesome-cordova-plugins/status-bar/ngx';
 
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
-
-  let statusBarSpy;
-  let splashScreenSpy;
   let platformReadySpy;
   let platformSpy;
 
   beforeEach(waitForAsync(() => {
-    statusBarSpy = jasmine.createSpyObj('StatusBar', ['styleDefault']);
-    splashScreenSpy = jasmine.createSpyObj('SplashScreen', ['hide']);
+    // Ya no se doblan SplashScreen ni StatusBar: con Capacitor 7 son
+    // APIs estaticas de @capacitor/*, y el componente solo las llama en
+    // plataforma nativa, asi que en el test no se ejecutan.
     platformReadySpy = Promise.resolve();
     platformSpy = jasmine.createSpyObj('Platform', { ready: platformReadySpy });
 
     TestBed.configureTestingModule({
       declarations: [AppComponent],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      providers: [
-        { provide: StatusBar, useValue: statusBarSpy },
-        { provide: SplashScreen, useValue: splashScreenSpy },
-        { provide: Platform, useValue: platformSpy },
-      ],
+      providers: [{ provide: Platform, useValue: platformSpy }],
     }).compileComponents();
   }));
 
@@ -41,10 +33,5 @@ describe('AppComponent', () => {
     TestBed.createComponent(AppComponent);
     expect(platformSpy.ready).toHaveBeenCalled();
     await platformReadySpy;
-    expect(statusBarSpy.styleDefault).toHaveBeenCalled();
-    expect(splashScreenSpy.hide).toHaveBeenCalled();
   });
-
-  // TODO: add more tests!
-
 });
