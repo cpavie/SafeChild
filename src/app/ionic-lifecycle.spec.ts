@@ -125,7 +125,7 @@ describe("Ciclo de vida de Ionic", () => {
 import { NgModule } from "@angular/core";
 import { RouterModule } from "@angular/router";
 import { Injectable } from "@angular/core";
-import { CanActivate } from "@angular/router";
+
 import { of } from "rxjs";
 import { delay, take } from "rxjs/operators";
 
@@ -149,7 +149,7 @@ class ModuloPerezoso {}
 // Misma forma que IsLoggedGuard: observable que emite una vez, tras un
 // tick, y completa.
 @Injectable({ providedIn: "root" })
-class GuardAsincrono implements CanActivate {
+class GuardAsincrono  {
   canActivate() {
     return of(true).pipe(delay(10), take(1));
   }
