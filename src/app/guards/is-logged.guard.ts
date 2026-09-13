@@ -1,18 +1,12 @@
 import { Injectable } from "@angular/core";
-import {
-  CanActivate,
-  ActivatedRouteSnapshot,
-  RouterStateSnapshot,
-  UrlTree,
-  Router,
-} from "@angular/router";
+import { ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree, Router } from "@angular/router";
 import { AngularFireAuth } from "@angular/fire/compat/auth";
 import { take, switchMap } from "rxjs/operators";
 
 @Injectable({
   providedIn: "root",
 })
-export class IsLoggedGuard implements CanActivate {
+export class IsLoggedGuard  {
   constructor(private auth: AngularFireAuth, private router: Router) {}
   canActivate() {
     return this.auth.authState.pipe(

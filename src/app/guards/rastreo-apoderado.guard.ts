@@ -1,11 +1,5 @@
 import { Injectable } from "@angular/core";
-import {
-  CanActivate,
-  ActivatedRouteSnapshot,
-  RouterStateSnapshot,
-  UrlTree,
-  Router,
-} from "@angular/router";
+import { ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree, Router } from "@angular/router";
 import { ToastController } from "@ionic/angular";
 import { Observable } from "rxjs";
 import { DatosService } from "../servicios/datos.service";
@@ -13,7 +7,7 @@ import { DatosService } from "../servicios/datos.service";
 @Injectable({
   providedIn: "root",
 })
-export class RastreoApoderadoGuard implements CanActivate {
+export class RastreoApoderadoGuard  {
   constructor(
     private dataService: DatosService,
     private toastController: ToastController
